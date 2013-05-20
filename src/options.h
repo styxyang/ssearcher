@@ -1,6 +1,8 @@
 #ifndef SS_OPTIONS_H
 #define SS_OPTIONS_H
 
+#define SS_DEBUG 0
+
 #define SM_ALGO_KMP 0
 
 typedef struct {

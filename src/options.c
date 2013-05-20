@@ -12,7 +12,7 @@ void parse_options(int argc, char *argv[]) {
   int ch, opt_idx;
 
   struct option longopts[] = {
-    { "kmp", no_argument, &ss_opts.str_matching_algo,0 }
+    { "kmp", no_argument, &ss_opts.str_matching_algo,0 },
   };
 
   while ((ch = getopt_long(argc, argv, "", longopts, &opt_idx)) != -1) {
@@ -20,6 +20,9 @@ void parse_options(int argc, char *argv[]) {
       case '?':
         usage();
       case 0:
+#ifdef DEBUG
+        printf("%d, %d\n", optopt, optind);
+#endif
         if (ss_opts.str_matching_algo == SM_ALGO_KMP)
           printf("using KMP algorithm\n");
         break;
@@ -27,6 +30,10 @@ void parse_options(int argc, char *argv[]) {
         usage();
     }
   }
+
+  /* `optind' is the index of next argument to be processed
+   * Suppress options already parsed */
   argc -= optind;
   argv += optind;
+
 }
