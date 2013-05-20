@@ -1,20 +1,24 @@
+#
+# This is makefile for ssearcher
+#
+# Copyright (c) 2013 by Yang Hong, All Rights Reserved.
 
 SRCDIR := src
-SRC := src
 OBJDIR := obj
 
 SS_OBJS := $(OBJDIR)/options.o $(OBJDIR)/main.o
-OBJ := $(patsubst %.c,%.o,$(filter %.c,$(SRC)))
+
+# Make sure that 'all' is the first target
+all: $(OBJDIR)/ssearcher
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@echo \  CC -O2 $<
 	@mkdir -p $(@D)
 	@$(CC) -O2 -c -o $@ $<
 
-default: $(SS_OBJS)
+$(OBJDIR)/ssearcher: $(SS_OBJS)
 	@echo \  CC -o $@
 	@$(CC) -o $@ $^
 
 clean:
 	rm -rf $(OBJDIR) $(SS_OBJS)
-	rm default
