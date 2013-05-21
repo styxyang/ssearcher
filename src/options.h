@@ -11,6 +11,8 @@ typedef struct {
 
 cli_options ss_opts;
 
+const char *ss_pat;
+
 void parse_options(int argc, char *argv[]);
 
 #endif  /* SS_OPTIONS_H */

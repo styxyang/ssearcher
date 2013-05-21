@@ -1,6 +1,7 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <stdio.h>
 
 #include "options.h"
 
@@ -36,4 +37,10 @@ void parse_options(int argc, char *argv[]) {
   argc -= optind;
   argv += optind;
 
+  if (argc < 1) {
+    perror("missing pattern");
+    exit(1);
+  }
+  ss_pat = argv[0];
+  printf("search for %s\n", ss_pat);
 }
