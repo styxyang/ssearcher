@@ -22,9 +22,7 @@ void init_kmp_table(int *kmp_table, char *pattern, unsigned int pat_len) {
   }
 }
 
-int kmp(char *text, char *pattern) {
-  int text_len = strlen(text);
-  int pat_len = strlen(pattern);
+int kmp(char *text, int text_len, char *pattern, int pat_len) {
   int max_match = 0;
   int pat_idx = 0;
 
@@ -100,21 +98,35 @@ int main(int argc, char *argv[])
 
   /* map the file to a space of 4K bytes */
   char *p;
-  if ((p = mmap(0, 4096, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
+  if ((p = mmap(0, 4096 * 1024, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
     err_exit("ss: fail to map the file");
   }
 
   char str[16];                         /* to hold the strings about the loc of pos */
-  char *pattern = "SS_CC";
+  char *pattern = opt.search_pattern;
 
+  int text_len, pat_len;
+
+  pat_len = strlen(pattern);
+  if (p[4095])
+    text_len = 4096 * 1024;
+  else
+    text_len = strlen(p);
+
+  printf("%d %d\n", text_len, pat_len);
   /* start searching using KMP algorithm */
-  int pos = kmp(p, pattern);
+  int pos = kmp(p, text_len, pattern, pat_len);
 
   printf("%d\n", pos);
-  snprintf(str, 15, "%s\n", p+pos+1);
-  printf("%s", str);
+  if (pos > 0) {
+    /* snprintf(str, 15, "%s\n", p+pos+1); */
+    /* /\* printf("%sssss\n", str); *\/ */
+    /* fprintf(stdout, "%ssssssssssss\n", str); */
+    /* fflush(NULL); */
+  }
+  /* printf("ssssssssssssss\n"); */
 
-  munmap(p, strlen(p));
+  munmap(p, 4096 * 1024);
   close(fd);
   
   return 0;
