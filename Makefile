@@ -51,7 +51,7 @@ all: $(SS_BIN)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(@D)
-	$(SS_CC) -O2 -g -c -o $@ $(SRCDIR)/$*.c
+	$(SS_CC) -O0 -g -c -o $@ $(SRCDIR)/$*.c
 
 $(SS_BIN): $(SS_OBJS)
 	$(SS_CC) -o $@ $^

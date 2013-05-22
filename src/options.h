@@ -6,12 +6,12 @@
 #define SM_ALGO_KMP 0
 
 typedef struct {
-  int str_matching_algo;
+  int   str_matching_algo;
+  char *search_pattern;
+  char *input_file;
 } cli_options;
 
-cli_options ss_opts;
-
-const char *ss_pat;
+cli_options opt;
 
 void parse_options(int argc, char *argv[]);
 

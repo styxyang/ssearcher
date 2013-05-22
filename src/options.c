@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#include <fcntl.h>
+
 #include "options.h"
 
 void usage() {
@@ -13,7 +15,8 @@ void parse_options(int argc, char *argv[]) {
   int ch, opt_idx;
 
   struct option longopts[] = {
-    { "kmp", no_argument, &ss_opts.str_matching_algo,0 },
+    { "kmp",  no_argument,       &opt.str_matching_algo, 0 },
+    { "file", required_argument, NULL                  , 0 }
   };
 
   /* since the arguments are not so many
@@ -26,10 +29,13 @@ void parse_options(int argc, char *argv[]) {
       case 0:
 #ifdef SS_DEBUG
         printf("%d, %d\n", optopt, optind);
-        DEBUG_HERE
+        DEBUG_HERE;
 #endif
-        if (ss_opts.str_matching_algo == SM_ALGO_KMP)
+        if (strcmp(longopts[opt_idx].name, "file") == 0) {
+          opt.input_file = optarg;
+        } else if (opt.str_matching_algo == SM_ALGO_KMP) {
           printf("using KMP algorithm\n");
+        }
         break;
       default:
         usage();
@@ -42,9 +48,14 @@ void parse_options(int argc, char *argv[]) {
   /* argv += optind; */
 
   if (optind >= argc) {
-    perror("missing pattern");
-    exit(1);
+    /* fprintf(stderr, "missing pattern missing"); */
+    err_exit("parse_options: missing pattern string");
   }
-  ss_pat = argv[optind];
-  printf("search for %s\n", ss_pat);
+  opt.search_pattern = argv[optind];
+  printf("search for %s\n", opt.search_pattern);
+
+  if (!opt.input_file) {
+    /* fprintf(stderr, "currently only one input file is supported: %s", opt.input_file); */
+    err_exit("parse_options: currently only one input file is supported");
+  }
 }
