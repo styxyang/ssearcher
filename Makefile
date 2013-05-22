@@ -1,14 +1,15 @@
 #
 # This is makefile for ssearcher
 #
-# Copyright (c) 2013 by Yang Hong, All Rights Reserved.
-# 
+# Copyright (c) 2013 by Yang Hong <hy dot styx at gmail dot com>
+#
 
 SRCDIR := src
 OBJDIR := obj
 
 SS_OBJS := $(OBJDIR)/options.o $(OBJDIR)/main.o
 SS_SRCS := $(patsubst $(OBJDIR)/%.o,$(SRCDIR)/%.c,$(SS_OBJS))
+SS_BIN  := ssearcher
 
 SS_CC=$(QUIET_CC)$(CC)
 
@@ -28,7 +29,7 @@ QUIET_INSTALL = @printf '    %b %b\n' $(LINKCOLOR)INSTALL$(ENDCOLOR) $(BINCOLOR)
 endif
 
 # Make sure that 'all' is the first target
-all: $(OBJDIR)/ssearcher
+all: $(SS_BIN)
 
 .PHONY: all clean depclean
 
@@ -52,11 +53,12 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(@D)
 	$(SS_CC) -O2 -g -c -o $@ $(SRCDIR)/$*.c
 
-$(OBJDIR)/ssearcher: $(SS_OBJS)
+$(SS_BIN): $(SS_OBJS)
 	$(SS_CC) -o $@ $^
 
 clean:
 	rm -rf $(OBJDIR) $(SS_OBJS)
+	rm -rf $(SS_BIN)
 
 depclean:
 	rm -rf $(SRCDIR)/*.d

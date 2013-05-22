@@ -1,7 +1,7 @@
 #ifndef SS_DEBUG_H
 #define SS_DEBUG_H
 
-#define SS_DEBUG 0
+/* #define SS_DEBUG */
 
 #define DEBUG_HERE                                      \
   do {                                                  \

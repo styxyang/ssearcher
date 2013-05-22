@@ -1,5 +1,6 @@
 # Object files
 *.o
+ssearcher
 
 # Libraries
 *.lib
@@ -18,3 +19,6 @@
 
 # Directories
 obj/
+
+# Dependencies
+*.d
