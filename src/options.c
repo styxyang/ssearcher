@@ -16,7 +16,8 @@ void parse_options(int argc, char *argv[]) {
 
   struct option longopts[] = {
     { "kmp",  no_argument,       &opt.str_matching_algo, 0 },
-    { "file", required_argument, NULL                  , 0 }
+    { "file", required_argument, NULL,                   0 },
+    { "dir",  required_argument, NULL,                   0 }
   };
 
   /* since the arguments are not so many
@@ -33,6 +34,8 @@ void parse_options(int argc, char *argv[]) {
 #endif
         if (strcmp(longopts[opt_idx].name, "file") == 0) {
           opt.input_file = optarg;
+        } else if (strcmp(longopts[opt_idx].name, "dir") == 0) {
+          opt.input_dir = optarg;
         } else if (opt.str_matching_algo == SM_ALGO_KMP) {
           printf("using KMP algorithm\n");
         }
@@ -54,8 +57,9 @@ void parse_options(int argc, char *argv[]) {
   opt.search_pattern = argv[optind];
   printf("search for %s\n", opt.search_pattern);
 
-  if (!opt.input_file) {
+  if (!opt.input_file && !opt.input_dir) {
     /* fprintf(stderr, "currently only one input file is supported: %s", opt.input_file); */
-    err_exit("parse_options: currently only one input file is supported");
+    /* err_exit("parse_options: currently only one input file is supported"); */
+    err_exit("parse_options: missing search scope");
   }
 }
