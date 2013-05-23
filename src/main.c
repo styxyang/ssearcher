@@ -63,7 +63,7 @@ int kmp(char *text, int text_len, char *pattern, int pat_len) {
     return -1;
 }
 
-void myftw(const char *dirname) {
+void myftw(const char *dirname, void (*fn)(char *, int, char *, int)) {
     struct stat    statbuf;
     DIR           *d;
     struct dirent *entry;
@@ -78,13 +78,45 @@ void myftw(const char *dirname) {
         err_exit("myftw: opendir failed");
     }
 
+    /* iteratively read directory entries */
     while ((entry = readdir(d)) != NULL) {
         struct stat st;
         char fullpath[512];
         snprintf(fullpath, sizeof(fullpath), "%s/%s", dirname, entry->d_name);
         lstat(fullpath, &st);
-        if (S_ISREG(st.st_mode))
+        if (S_ISREG(st.st_mode)) {
             printf("%s\n", entry->d_name);
+
+            /* pasted from main() */
+            int fd;
+            if ((fd = open(entry->d_name, O_RDONLY)) == -1) {
+                err_exit("ss: fail to open file for read");
+            }
+
+            /* map the file to a space of 4K bytes */
+            char *p;
+            if ((p = mmap(0, 4096 * 1024, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
+                err_exit("ss: fail to map the file");
+            }
+
+            char str[16];                         /* to hold the strings about the loc of pos */
+            char *pattern = opt.search_pattern;
+
+            int text_len, pat_len;
+
+            pat_len = strlen(pattern);
+            if (p[4095])
+                text_len = 4096 * 1024;
+            else
+                text_len = strlen(p);
+
+            printf("%d %d\n", text_len, pat_len);
+
+            fn(p, text_len, pattern, pat_len);
+
+            munmap(p, 4096 * 1024);
+            close(fd);
+        }
     }
 
     if (closedir(d) < 0) {
@@ -167,7 +199,7 @@ int main(int argc, char *argv[])
         err_exit("ss: missing input_dir");
     }
     printf("search in %s\n", opt.input_dir);
-    myftw(opt.input_dir);
+    myftw(opt.input_dir, kmp);
 #endif
     return 0;
 #endif
