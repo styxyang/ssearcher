@@ -40,10 +40,12 @@ int kmp(char *text, int text_len, char *pattern, int pat_len) {
     while (text_pos < text_len) {
         /* printf("%d %d %c %c\n", text_pos, pat_idx, text[text_pos], pattern[pat_idx]); */
         if (text[text_pos] == pattern[pat_idx]) {
-            pat_idx++;
-            text_pos++;
-            if (pat_idx == pat_len)
+            if (pat_idx == pat_len - 1)
                 goto found;
+            else {
+                pat_idx++;
+                text_pos++;
+            }
         } else {
             /* fix this ? */
             if (pat_idx == 0) {
@@ -52,10 +54,12 @@ int kmp(char *text, int text_len, char *pattern, int pat_len) {
             }
             pat_idx = kmp_table[pat_idx - 1];
             if (text[text_pos] == pattern[pat_idx]) {
-                pat_idx++;
-                text_pos++;
-                if (pat_idx == pat_len)
+                if (pat_idx == pat_len - 1) {
                     goto found;
+                } else {
+                    pat_idx++;
+                    text_pos++;
+                }
             } else if (pat_idx != 0) {
                 pat_idx = 0;
             } else {
@@ -69,7 +73,7 @@ found:
     /* would it be unnecessary to freeit?
      * since it will be only executed quickly and then terminated */
     free(kmp_table);
-    return text_pos - pat_len - 1;
+    return text_pos - pat_len + 1;
 }
 
 void myftw(const char *dirname, int (*fn)(char *, int, char *, int)) {
@@ -104,7 +108,7 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int)) {
 
             /* map the file to a space of 4M bytes */
             char *p;
-            if ((p = mmap(0, 4096, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
+            if ((p = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
                 err_exit("ss: fail to map the file");
             }
 
@@ -114,16 +118,26 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int)) {
             int text_len, pat_len;
 
             pat_len = strlen(pattern);
-            if (p[4095])
-                text_len = 4096;
-            else
-                text_len = strlen(p);
+            /* if (p[4095]) */
+            /*     text_len = 4096; */
+            /* else */
+            /*     text_len = strlen(p); */
+            text_len = st.st_size;
 
             printf("%d %d\n", text_len, pat_len);
 
-            fn(p, text_len, pattern, pat_len);
+            int pos = 0;
+            while (pos < st.st_size) {
+                int result = fn(p + pos, text_len - pos, pattern, pat_len);
+                if (result < 0) {
+                    break;
+                } else {
+                    pos += result + pat_len;
+                    printf("pos: %d -- %.*s\n", pos, 20, p + pos - pat_len);
+                }
+            }
 
-            munmap(p, 4096);
+            munmap(p, st.st_size);
             close(fd);
         }
     }
