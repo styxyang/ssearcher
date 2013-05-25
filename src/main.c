@@ -43,16 +43,19 @@ int kmp(char *text, int text_len, char *pattern, int pat_len) {
             pat_idx++;
             text_pos++;
             if (pat_idx == pat_len)
-                return text_pos - pat_len - 1;
-            continue;
+                goto found;
         } else {
+            /* fix this ? */
+            if (pat_idx == 0) {
+                text_pos++;
+                continue;
+            }
             pat_idx = kmp_table[pat_idx - 1];
             if (text[text_pos] == pattern[pat_idx]) {
                 pat_idx++;
                 text_pos++;
                 if (pat_idx == pat_len)
-                    return text_pos - pat_len - 1;
-                continue;
+                    goto found;
             } else if (pat_idx != 0) {
                 pat_idx = 0;
             } else {
@@ -60,10 +63,16 @@ int kmp(char *text, int text_len, char *pattern, int pat_len) {
             }
         }
     }
+    free(kmp_table);
     return -1;
+found:
+    /* would it be unnecessary to freeit?
+     * since it will be only executed quickly and then terminated */
+    free(kmp_table);
+    return text_pos - pat_len - 1;
 }
 
-void myftw(const char *dirname, void (*fn)(char *, int, char *, int)) {
+void myftw(const char *dirname, int (*fn)(char *, int, char *, int)) {
     struct stat    statbuf;
     DIR           *d;
     struct dirent *entry;
@@ -89,13 +98,13 @@ void myftw(const char *dirname, void (*fn)(char *, int, char *, int)) {
 
             /* pasted from main() */
             int fd;
-            if ((fd = open(entry->d_name, O_RDONLY)) == -1) {
-                err_exit("ss: fail to open file for read");
+            if ((fd = open(fullpath, O_RDONLY)) == -1) {
+                err_exit("ss: fail to open file for read: %s", fullpath);
             }
 
-            /* map the file to a space of 4K bytes */
+            /* map the file to a space of 4M bytes */
             char *p;
-            if ((p = mmap(0, 4096 * 1024, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
+            if ((p = mmap(0, 4096, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
                 err_exit("ss: fail to map the file");
             }
 
@@ -106,7 +115,7 @@ void myftw(const char *dirname, void (*fn)(char *, int, char *, int)) {
 
             pat_len = strlen(pattern);
             if (p[4095])
-                text_len = 4096 * 1024;
+                text_len = 4096;
             else
                 text_len = strlen(p);
 
@@ -114,7 +123,7 @@ void myftw(const char *dirname, void (*fn)(char *, int, char *, int)) {
 
             fn(p, text_len, pattern, pat_len);
 
-            munmap(p, 4096 * 1024);
+            munmap(p, 4096);
             close(fd);
         }
     }
