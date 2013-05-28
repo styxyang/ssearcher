@@ -1,11 +1,11 @@
+#include "options.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
 
 #include <fcntl.h>
-
-#include "options.h"
 
 void usage() {
   printf("there is nothing\n");
