@@ -19,12 +19,11 @@ int main(int argc, char *argv[]) {
         perror("failed to open file");
         exit(1);
     }
-    if (read(fd, &hdr, sizeof(hdr)) < 0) {
-        perror("read error");
-    }
-    printf("%x\n", (hdr.magic == MH_MAGIC_64));
-    /* for (i = 0; i < sizeof(buf); i++) */
-    /*     printf("%d ", buf[i] & 0xff); */
+
+    read(fd, buf, 4);
+    printf("%x\n", *(unsigned int *)buf);
+
+
     close(fd);
     return 0;
 }

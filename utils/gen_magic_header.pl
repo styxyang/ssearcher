@@ -25,8 +25,17 @@ while (<MAGIC_SRC>) {
   last if /^\s+$/;
 }
 
+foreach my $key (sort keys %magic_map) {
+  my @output = ($key =~ m/.{2}/g);
+  # print Dumper \@output;
+  @output = map { "0x0".$_ } @output;
+  push(@output, "0x100") for (0..(8 - $#output - 1));
+  print "{".join(", ", @output)."}\n";
+  printf MAGIC_SRCTMP "#define %s%*s0x%s\n", $magic_map{$key}, 16 - length($magic_map{$key}) + 1, " ", $key;
+}
+
 # insert into magic.c definitions
-print MAGIC_SRCTMP "static int magic_index[MAXIDX] = {\n";
+print MAGIC_SRCTMP "\nstatic int magic_index[MAXIDX] = {\n";
 foreach my $key (sort keys %magic_map) {
 
   $key =~ /^(\S\S).*$/;
@@ -39,7 +48,7 @@ while (<MAGIC_SRC>) {
   print MAGIC_SRCTMP $_;
 }
 
-print Dumper \%magic_map;
+# print Dumper \%magic_map;
 
 close MAGIC_DEFS;
 close MAGIC_SRC;
