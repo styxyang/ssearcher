@@ -1,17 +1,33 @@
 #include "options.h"
+#include "debug.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <dirent.h>
 #include <sys/stat.h>
 #include <limits.h>
 
+#include <pthread.h>
+
 /* #define TEST_KMP */
 #define TEST_DIR
+
+#define USE_PTHREAD
+
+pthread_t pid[2] = { 0, 0 };
+
+typedef struct th_arg {
+    char *pstart;
+    int   text_len;
+    char *pattern;
+    int   pat_len;
+    int   result;
+} thread_arg;
 
 void init_kmp_table(int *kmp_table, char *pattern, unsigned int pat_len) {
     /* if (pat_len < 1 */
@@ -27,7 +43,12 @@ void init_kmp_table(int *kmp_table, char *pattern, unsigned int pat_len) {
     }
 }
 
-int kmp(char *text, int text_len, char *pattern, int pat_len) {
+#ifdef USE_PTHREAD
+void kmp(void *)
+#else
+int kmp(char *text, int text_len, char *pattern, int pat_len)
+#endif
+{
     int max_match = 0;
     int pat_idx = 0;
 
@@ -128,7 +149,27 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int)) {
 
             int pos = 0;
             while (pos < st.st_size) {
+#ifdef USE_PTHREAD
+                int result;
+                __thread thread_arg arg = {
+                    .pstart = p + pos,
+                    .text_len = text_len - pos,
+                    .pattern = pattern,
+                    .pat_len = pat_len,
+                    .result = -1;
+                };
+                if (pid[0] == 0) {
+                    pthread_create(&pid[0], NULL, fn, thread_arg);
+                    pthread_join(pid[0], NULL);
+                } else if (pid[1] == 0) {
+                    pthread_create(&pid[1], NULL, fn, thread_arg);
+                    pthread_join(pid[1], NULL);
+                } else {
+                    continue;
+                }
+#else
                 int result = fn(p + pos, text_len - pos, pattern, pat_len);
+#endif
                 if (result < 0) {
                     break;
                 } else {

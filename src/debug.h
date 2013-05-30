@@ -1,6 +1,8 @@
 #ifndef SS_DEBUG_H
 #define SS_DEBUG_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 /* #define SS_DEBUG */

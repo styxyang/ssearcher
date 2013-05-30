@@ -12,7 +12,7 @@ SS_SRCS := $(patsubst $(OBJDIR)/%.o,$(SRCDIR)/%.c,$(SS_OBJS))
 SS_BIN  := ssearcher
 
 SS_CC=$(QUIET_CC)$(CC)
-CFLAGS += -O0
+CFLAGS += -O0 -g -Wall -pthread
 
 # Borrowed from redis Makefile
 # to make output colourful ^_^
@@ -52,7 +52,7 @@ all: $(SS_BIN)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(@D)
-	$(SS_CC) $(CFLAGS) -g -c -o $@ $(SRCDIR)/$*.c
+	$(SS_CC) $(CFLAGS) -c -o $@ $(SRCDIR)/$*.c
 
 $(SS_BIN): $(SS_OBJS)
 	$(SS_CC) -o $@ $^
