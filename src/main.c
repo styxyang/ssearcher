@@ -1,4 +1,5 @@
 #include "options.h"
+#include "patmatch.h"
 #include "debug.h"
 
 #include <stdio.h>
@@ -17,7 +18,7 @@
 /* #define TEST_KMP */
 #define TEST_DIR
 
-#define USE_PTHREAD
+/* #define USE_PTHREAD */
 
 pthread_t pid[2] = { 0, 0 };
 
@@ -29,75 +30,13 @@ typedef struct th_arg {
     int   result;
 } thread_arg;
 
-void init_kmp_table(int *kmp_table, char *pattern, unsigned int pat_len) {
-    /* if (pat_len < 1 */
-    kmp_table[0] = 0;
-    int i;
-
-    for (i = 1; i < pat_len; i++) {
-        if (pattern[kmp_table[i - 1]] == pattern[i]) {
-            kmp_table[i] = kmp_table[i - 1] + 1;
-        } else {
-            kmp_table[i] = 0;
-        }
-    }
-}
 
 #ifdef USE_PTHREAD
-void kmp(void *)
+void myftw(const char *dirname, void *(*fn)(void *))
 #else
-int kmp(char *text, int text_len, char *pattern, int pat_len)
+void myftw(const char *dirname, int (*fn)(char *, int, char *, int))
 #endif
 {
-    int max_match = 0;
-    int pat_idx = 0;
-
-    int text_pos = 0;
-    int found = 0;
-
-    int *kmp_table = (int *)malloc(sizeof(int) * pat_len);
-    init_kmp_table(kmp_table, pattern, pat_len);
-
-    while (text_pos < text_len) {
-        /* printf("%d %d %c %c\n", text_pos, pat_idx, text[text_pos], pattern[pat_idx]); */
-        if (text[text_pos] == pattern[pat_idx]) {
-            if (pat_idx == pat_len - 1)
-                goto found;
-            else {
-                pat_idx++;
-                text_pos++;
-            }
-        } else {
-            /* fix this ? */
-            if (pat_idx == 0) {
-                text_pos++;
-                continue;
-            }
-            pat_idx = kmp_table[pat_idx - 1];
-            if (text[text_pos] == pattern[pat_idx]) {
-                if (pat_idx == pat_len - 1) {
-                    goto found;
-                } else {
-                    pat_idx++;
-                    text_pos++;
-                }
-            } else if (pat_idx != 0) {
-                pat_idx = 0;
-            } else {
-                text_pos++;
-            }
-        }
-    }
-    free(kmp_table);
-    return -1;
-found:
-    /* would it be unnecessary to freeit?
-     * since it will be only executed quickly and then terminated */
-    free(kmp_table);
-    return text_pos - pat_len + 1;
-}
-
-void myftw(const char *dirname, int (*fn)(char *, int, char *, int)) {
     struct stat    statbuf;
     DIR           *d;
     struct dirent *entry;
@@ -133,7 +72,6 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int)) {
                 err_exit("ss: fail to map the file");
             }
 
-            char str[16];                         /* to hold the strings about the loc of pos */
             char *pattern = opt.search_pattern;
 
             int text_len, pat_len;
@@ -150,32 +88,37 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int)) {
             int pos = 0;
             while (pos < st.st_size) {
 #ifdef USE_PTHREAD
-                int result;
-                __thread thread_arg arg = {
+                thread_arg arg = {
                     .pstart = p + pos,
                     .text_len = text_len - pos,
                     .pattern = pattern,
                     .pat_len = pat_len,
-                    .result = -1;
+                    .result = -1,
                 };
                 if (pid[0] == 0) {
-                    pthread_create(&pid[0], NULL, fn, thread_arg);
+                    pthread_create(&pid[0], NULL, fn, &arg);
                     pthread_join(pid[0], NULL);
                 } else if (pid[1] == 0) {
-                    pthread_create(&pid[1], NULL, fn, thread_arg);
+                    pthread_create(&pid[1], NULL, fn, &arg);
                     pthread_join(pid[1], NULL);
                 } else {
                     continue;
                 }
+                if (arg.result < 0) {
+                    break;
+                } else {
+                    pos += arg.result + pat_len;
+                    printf("pos: %d -- %.*s\n", pos, 20, p + pos - pat_len);
+                }
 #else
                 int result = fn(p + pos, text_len - pos, pattern, pat_len);
-#endif
                 if (result < 0) {
                     break;
                 } else {
                     pos += result + pat_len;
                     printf("pos: %d -- %.*s\n", pos, 20, p + pos - pat_len);
                 }
+#endif
             }
 
             munmap(p, st.st_size);
@@ -245,7 +188,7 @@ int main(int argc, char *argv[])
 
     printf("%d %d\n", text_len, pat_len);
     /* start searching using KMP algorithm */
-    int pos = kmp(p, text_len, pattern, pat_len);
+    int pos = kmp_match(p, text_len, pattern, pat_len);
 
     printf("%d\n", pos);
     if (pos > 0) {
@@ -263,7 +206,7 @@ int main(int argc, char *argv[])
         err_exit("ss: missing input_dir");
     }
     printf("search in %s\n", opt.input_dir);
-    myftw(opt.input_dir, kmp);
+    myftw(opt.input_dir, kmp_match);
 #endif
     return 0;
 #endif

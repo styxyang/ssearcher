@@ -8,7 +8,7 @@ use Data::Dumper;
 
 my $magic_defs = "src/magic_defs";
 my $magic_src = "src/magic.c";
-my %magic_map;
+my %magic_map;			# map of hexcode to name
 
 open MAGIC_DEFS, "<", $magic_defs;
 open MAGIC_SRC,  "<", $magic_src;
@@ -19,12 +19,14 @@ while (<MAGIC_DEFS>) {
   /^(\S+)\s+(\S+)$/;
   $magic_map{$1} = $2;
 }
+close MAGIC_DEFS;
 
 while (<MAGIC_SRC>) {
   print MAGIC_SRCTMP $_;
   last if /^\s+$/;
 }
 
+my $count = 0;
 foreach my $key (sort keys %magic_map) {
   my @output = ($key =~ m/.{2}/g);
   # print Dumper \@output;
@@ -50,6 +52,5 @@ while (<MAGIC_SRC>) {
 
 # print Dumper \%magic_map;
 
-close MAGIC_DEFS;
 close MAGIC_SRC;
 close MAGIC_SRCTMP;
