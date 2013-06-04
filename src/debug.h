@@ -2,36 +2,28 @@
 #define SS_DEBUG_H
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-/* #define SS_DEBUG */
 
-#define MAXLINE 128
+#define DEBUG
 
-#define DEBUG_HERE                                      \
-  do {                                                  \
-    fprintf(stderr, "(D) %s:%d\n", __FILE__, __LINE__); \
-  } while (0);
+#define ERROR   0
+#define WARN    1
+#define INFO    2
 
-static void err_exit(const char *fmt, ...) {
-  va_list ap;
-  char buf[MAXLINE];                    /* TODO: Buffer overflow ? find better solution */
+/* colors for different debug level */
+#define ERROR_CLR  "\e[1;31m"
+#define WARN_CLR "\e[1;33m"
+#define INFO_CLR "\e[1;34m"
 
-  va_start(ap, fmt);
+#ifdef DEBUG
+#define dprintf(level, fmt, ...)                                        \
+    do {                                                                \
+        fprintf(stderr, level##_CLR "%s:%d: %s: " fmt "\e[0m",           \
+                __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__);       \
+    } while (0)
+#else
+#define dprintf(level, fmt, ...)                \
+    do {                                        \
+    } while (0)
+#endif
 
-  vsnprintf(buf, MAXLINE, fmt, ap);
-  if (sizeof(buf) - strlen(buf) > 1) {
-    strncat(buf, "\n", 1);
-    fflush(stdout);                     /* in case stdout and stderr are the same */
-    fputs(buf, stderr);                 /* TODO: any security issues ? */
-    fflush(NULL);                       /* flushes all stdio output streams */
-    va_end(ap);
-    exit(1);
-  } else {
-    fprintf(stderr, "debug routine fails: %s:%d", __FILE__, __LINE__);
-    exit(-1);
-  }
-}
-
-#endif  /* SS_DEBUG_H */
+#endif /* SS_DEBUG_H */

@@ -16,4 +16,4 @@ cli_options opt;
 
 void parse_options(int argc, char *argv[]);
 
-#endif  /* SS_OPTIONS_H */
+#endif /* SS_OPTIONS_H */

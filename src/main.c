@@ -41,14 +41,19 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int))
     DIR           *d;
     struct dirent *entry;
 
-    if (lstat(dirname, &statbuf) < 0)    /* stat error */
-        err_exit("myftw: lstat error: %s:%d", __FILE__, __LINE__);
+    if (lstat(dirname, &statbuf) < 0) { /* stat error */
+        dprintf(ERROR, "lstat error");
+        exit(-1);
+    }
 
-    if (S_ISDIR(statbuf.st_mode) == 0)    /* not a directory */
-        err_exit("myftw: target not a directory");
+    if (S_ISDIR(statbuf.st_mode) == 0) { /* not a directory */
+        dprintf(ERROR, "target not a directory");
+        exit(-1);
+    }
 
     if ((d = opendir(dirname)) == NULL) {
-        err_exit("myftw: opendir failed");
+        dprintf(ERROR, "opendir failed");
+        exit(-1);
     }
 
     /* iteratively read directory entries */
@@ -63,13 +68,15 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int))
             /* pasted from main() */
             int fd;
             if ((fd = open(fullpath, O_RDONLY)) == -1) {
-                err_exit("ss: fail to open file for read: %s", fullpath);
+                dprintf(ERROR, "fail to open file for read: %s", fullpath);
+                exit(-1);
             }
 
             /* map the file to a space of 4M bytes */
             char *p;
             if ((p = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
-                err_exit("ss: fail to map the file");
+                dprintf(ERROR, "ss: fail to map the file");
+                exit(-1);
             }
 
             char *pattern = opt.search_pattern;
@@ -127,7 +134,8 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int))
     }
 
     if (closedir(d) < 0) {
-        err_exit("myftw: closedir failed");
+        dprintf(ERROR, "closedir failed");
+        exit(-1);
     }
 }
 
@@ -158,7 +166,8 @@ int main(int argc, char *argv[])
 #ifndef TEST_DIR
     /* default to search in the current directory */
     if (!opt.input_file) {
-        err_exit("err_exit");
+        dprintf(ERROR, "err_exit");
+        exit(-1);
     }
 
     /* open file for searching
@@ -166,13 +175,15 @@ int main(int argc, char *argv[])
     /* TODO: tilde-expansion ? */
     int fd;
     if ((fd = open(opt.input_file, O_RDONLY)) == -1) {
-        err_exit("ss: fail to open file for read");
+        dprintf(ERROR, "fail to open file for read");
+        exit(-1);
     }
 
     /* map the file to a space of 4K bytes */
     char *p;
     if ((p = mmap(0, 4096 * 1024, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
-        err_exit("ss: fail to map the file");
+        dprintf(EROR, "fail to map the file");
+        exit(-1);
     }
 
     char str[16];                         /* to hold the strings about the loc of pos */
@@ -203,7 +214,8 @@ int main(int argc, char *argv[])
     close(fd);
 #else
     if (!opt.input_dir) {
-        err_exit("ss: missing input_dir");
+        dprintf(ERROR, "missing input_dir");
+        exit(-1);
     }
     printf("search in %s\n", opt.input_dir);
     myftw(opt.input_dir, kmp_match);

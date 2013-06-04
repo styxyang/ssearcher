@@ -18,21 +18,21 @@ static void kmp_table_init(int *kmp_table, char *pattern, unsigned int pat_len) 
 
 int kmp_match(char *text, int text_len, char *pat, int pat_len)
 {
-    int max_match = 0;
+    /* int max_match = 0; */
 
     int pat_pos = 0;        /* index points to locations of pattern */
     int text_pos = 0;       /* index points to locations of text  */
 
-#ifdef SS_MALIGN
+    /* array holding the prefix vector */
     int *kmp_table = NULL;
+#ifdef SS_MALIGN
     if (posix_memalign((void **)&kmp_table, 0x1000, sizeof(int) * pat_len) != 0) {
-        printf("fail to align allocated memory");
+        printf("can't memalign memory");
         exit(-1);
     }
 #else
-    int *kmp_table = (int *)malloc(sizeof(int) * pat_len);
-    if (kmp_table == NULL) {
-        printf("fail to malloc memory");
+    if ((kmp_table = (int *)malloc(sizeof(int) * pat_len)) == NULL) {
+        printf("can't to malloc memory");
         exit(-1);
     }
 #endif

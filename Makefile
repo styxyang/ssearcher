@@ -46,6 +46,8 @@ all: $(SS_BIN)
 # obj/main.o: src/main.c src/options.h src/debug.h
 # Make sure the target of dependencies match
 # binary files in `obj' directory
+# -MT: specify the target file
+# -MM: specify input file(s)
 %.d: %.c
 	$(SS_CC) $(CFLAGS) -MM $< -MT $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$<) > $@;
 
