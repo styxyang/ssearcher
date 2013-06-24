@@ -11,13 +11,13 @@
 
 /* colors for different debug level */
 #define ERROR_CLR  "\e[1;31m"
-#define WARN_CLR "\e[1;33m"
-#define INFO_CLR "\e[1;34m"
+#define WARN_CLR   "\e[1;33m"
+#define INFO_CLR   "\e[1;34m"
 
 #ifdef DEBUG
 #define dprintf(level, fmt, ...)                                        \
     do {                                                                \
-        fprintf(stderr, level##_CLR "%s:%d: %s: " fmt "\e[0m",           \
+        fprintf(stderr, level##_CLR "[%s:%d] %s: " fmt "\e[0m",           \
                 __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__);       \
     } while (0)
 #else

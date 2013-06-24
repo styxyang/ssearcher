@@ -7,7 +7,7 @@
 SRCDIR := src
 OBJDIR := obj
 
-SS_OBJS := $(OBJDIR)/options.o $(OBJDIR)/main.o $(OBJDIR)/patmatch.o
+SS_OBJS := $(OBJDIR)/options.o $(OBJDIR)/main.o $(OBJDIR)/match.o
 SS_SRCS := $(patsubst $(OBJDIR)/%.o,$(SRCDIR)/%.c,$(SS_OBJS))
 SS_BIN  := ssearcher
 
