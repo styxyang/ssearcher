@@ -1,7 +1,7 @@
 #ifndef SS_POOL_H_
 #define SS_POOL_H_
 
-#include "../src/config.h"
+#include "config.h"
 
 #include <pthread.h>
 

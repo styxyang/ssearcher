@@ -6,13 +6,19 @@
 
 SRCDIR := src
 OBJDIR := obj
+UNAME_S := $(shell uname -s)
 
 SS_OBJS := $(OBJDIR)/options.o $(OBJDIR)/main.o $(OBJDIR)/match.o $(OBJDIR)/pool.o
 SS_SRCS := $(patsubst $(OBJDIR)/%.o,$(SRCDIR)/%.c,$(SS_OBJS))
 SS_BIN  := ssearcher
 
 SS_CC=$(QUIET_CC)$(CC)
-CFLAGS += -O0 -g -Wall -pthread
+CFLAGS += -O0 -g -Wall
+
+ifneq ($(UNAME_S),Darwin)
+LDFLAGS += -pthread
+endif
+
 
 # Borrowed from redis Makefile
 # to make output colourful ^_^
@@ -57,7 +63,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(SS_CC) $(CFLAGS) -c -o $@ $(SRCDIR)/$*.c
 
 $(SS_BIN): $(SS_OBJS)
-	$(SS_CC) -o $@ $^
+	$(SS_CC) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -rf $(OBJDIR) $(SS_OBJS)
