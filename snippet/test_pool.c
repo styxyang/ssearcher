@@ -1,16 +1,21 @@
 #include "pool.h"
+#include "../src/debug.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <assert.h>
 
-#define WORKER_ENABLE 4
+#define WORKER_ENABLE 2
 
 pthread_mutex_t mutex;
+pthread_mutex_t pool_mutex;
+pthread_mutex_t io_mutex;
 pthread_cond_t  cond;
 
-void *thread_pool_wrapper(void *arg)
+int g_flag;
+int nthread;
 {
     pthread_cond_wait(&cond, &mutex);
     pthread_t tid = pthread_self();

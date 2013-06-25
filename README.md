@@ -1,6 +1,8 @@
 ssearcher
 =========
 
+[![Build Status](https://travis-ci.org/styx-hy/ssearcher.png)](https://travis-ci.org/styx-hy/ssearcher)
+
 another simple searcher designed for local text files
 
 ### Build
