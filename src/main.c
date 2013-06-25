@@ -20,18 +20,22 @@
 /* #define TEST_KMP */
 #define TEST_DIR
 
-/* #define USE_PTHREAD */
+pthread_t pid[2] = { 0, 1 };
+int finish[2] = { 0, 0 };
+pthread_t mainthread;
 
-pthread_t pid[2] = { 0, 0 };
-
-typedef struct th_arg {
-    char *pstart;
-    int   text_len;
-    char *pattern;
-    int   pat_len;
-    int   result;
-} thread_arg;
-
+void sig_handler(int signum)
+{
+    dprintf(WARN, "signal received\n");
+    if (finish[0]) {
+        pid[0] = 0;
+        dprintf(WARN, "thread #0 released\n");
+    }
+    if (finish[1]) {
+        pid[1] = 1;
+        dprintf(WARN, "thread #1 released\n");
+    }
+}
 
 #ifdef USE_PTHREAD
 void myftw(const char *dirname, void *(*fn)(void *))
@@ -92,33 +96,55 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int))
             /*     text_len = strlen(p); */
             text_len = st.st_size;
 
-            printf("%d %d\n", text_len, pat_len);
+            dprintf(INFO, "text_len: %d, pat_len: %d\n", text_len, pat_len);
+#ifdef USE_PTHREAD
+            signal(SIGUSR1, sig_handler);
+            mainthread = pthread_self();
+#endif
 
             int pos = 0;
             while (pos < st.st_size) {
 #ifdef USE_PTHREAD
-                thread_arg arg = {
-                    .pstart = p + pos,
-                    .text_len = text_len - pos,
-                    .pattern = pattern,
-                    .pat_len = pat_len,
-                    .result = -1,
-                };
+                /* thread_arg arg = { */
+                /*     .pstart = p + pos, */
+                /*     .text_len = text_len - pos, */
+                /*     .pattern = pattern, */
+                /*     .pat_len = pat_len, */
+                /*     .result = -1, */
+                /* }; */
                 if (pid[0] == 0) {
+                    thread_arg arg = {
+                        .pstart = p + pos,
+                        .text_len = text_len - pos,
+                        .pattern = pattern,
+                        .pat_len = pat_len,
+                        .num = 0,
+                        .result = -1,
+                    };
                     pthread_create(&pid[0], NULL, fn, &arg);
-                    pthread_join(pid[0], NULL);
+                    dprintf(INFO, "thread %u starts on 0\n", pid[0]);
+                    /* pthread_join(pid[0], NULL); */
+                    /* pid[0] = 0; */
                 } else if (pid[1] == 0) {
+                    thread_arg arg = {
+                        .pstart = p + pos,
+                        .text_len = text_len - pos,
+                        .pattern = pattern,
+                        .pat_len = pat_len,
+                        .num = 1,
+                        .result = -1,
+                    };
                     pthread_create(&pid[1], NULL, fn, &arg);
-                    pthread_join(pid[1], NULL);
+                    dprintf(INFO, "thread %u starts on 1\n", pid[1]);
                 } else {
                     continue;
                 }
-                if (arg.result < 0) {
-                    break;
-                } else {
-                    pos += arg.result + pat_len;
-                    printf("pos: %d -- %.*s\n", pos, 20, p + pos - pat_len);
-                }
+                /* if (arg.result < 0) { */
+                /*     break; */
+                /* } else { */
+                /*     pos += arg.result + pat_len; */
+                /*     printf("pos: %d -- %.*s\n", pos, 20, p + pos - pat_len); */
+                /* } */
 #else
                 int result = fn(p + pos, text_len - pos, pattern, pat_len);
                 if (result < 0) {
