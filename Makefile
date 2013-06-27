@@ -13,8 +13,10 @@ SS_SRCS := $(patsubst $(OBJDIR)/%.o,$(SRCDIR)/%.c,$(SS_OBJS))
 SS_BIN  := ssearcher
 
 SS_CC=$(QUIET_CC)$(CC)
+SS_LD=$(QUIET_LINK)$(CC)
 CFLAGS += -O0 -g -Wall
 
+# -pthread is not needed on Darwin
 ifneq ($(UNAME_S),Darwin)
 LDFLAGS += -pthread
 endif
@@ -63,7 +65,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(SS_CC) $(CFLAGS) -c -o $@ $(SRCDIR)/$*.c
 
 $(SS_BIN): $(SS_OBJS)
-	$(SS_CC) -o $@ $^ $(LDFLAGS)
+	$(SS_LD) $^ -o $@ $(LDFLAGS)
 
 clean:
 	rm -rf $(OBJDIR) $(SS_OBJS)
