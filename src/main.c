@@ -20,22 +20,9 @@
 /* #define TEST_KMP */
 #define TEST_DIR
 
-pthread_t pid[2] = { 0, 1 };
+pthread_t pid[2];
 int finish[2] = { 0, 0 };
 pthread_t mainthread;
-
-void sig_handler(int signum)
-{
-    dprintf(WARN, "signal received\n");
-    if (finish[0]) {
-        pid[0] = 0;
-        dprintf(WARN, "thread #0 released\n");
-    }
-    if (finish[1]) {
-        pid[1] = 1;
-        dprintf(WARN, "thread #1 released\n");
-    }
-}
 
 #ifdef USE_PTHREAD
 void myftw(const char *dirname, void *(*fn)(void *))
@@ -98,7 +85,6 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int))
 
             dprintf(INFO, "text_len: %d, pat_len: %d\n", text_len, pat_len);
 #ifdef USE_PTHREAD
-            signal(SIGUSR1, sig_handler);
             mainthread = pthread_self();
 #endif
 
