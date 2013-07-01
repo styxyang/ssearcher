@@ -1,6 +1,6 @@
 SS_CC=$(QUIET_CC)$(CC)
 SS_LD=$(QUIET_LINK)$(CC)
-CFLAGS += -O0 -g -Wall
+CFLAGS += -O0 -g
 
 # -pthread is not needed on Darwin
 ifneq ($(UNAME_S),Darwin)

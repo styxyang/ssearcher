@@ -7,22 +7,23 @@
 SUBDIR := src snippets
 SRCDIR := src
 OBJDIR := obj
+DEPDIR := deps
 UNAME_S := $(shell uname -s)
 
 SRCS :=
 OBJS :=
 
-
-include $(patsubst %, %/rules.mk, $(SUBDIR))
-
-SS_BIN := ssearcher
-
-include common.mk
-
-# Make sure that 'all' is the first target
-default: $(SS_BIN) $(SNPT_BIN)
+TARGETS :=
 
 .PHONY: default clean depclean test
+
+# Make sure that 'default' is the first target
+default:
+
+include $(patsubst %, %/rules.mk, $(SUBDIR))
+include common.mk
+
+default: $(TARGETS)
 
 # -include Makefile.dep
 # dep: $(SRCS:.c=.d)
@@ -30,7 +31,7 @@ default: $(SS_BIN) $(SNPT_BIN)
 # .PHONY: dep
 
 # include automatically generated dependencies
--include $(SRCS:.c=.d)
+include $(patsubst $(SRCDIR)/%.c,$(DEPDIR)/%.d,$(SRCS))
 
 # Generage dependencies like:
 # obj/main.o: src/main.c src/options.h src/debug.h
@@ -38,26 +39,17 @@ default: $(SS_BIN) $(SNPT_BIN)
 # binary files in `obj' directory
 # -MT: specify the target file
 # -MM: specify input file(s)
-%.d: %.c
-	$(SS_CC) $(CFLAGS) -MM $< -MT $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$<) > $@;
-
-$(OBJDIR)/snippets/%.o: snippets/%.c
+$(DEPDIR)/%.d: $(SRCDIR)/%.c
 	@mkdir -p $(@D)
-	$(SS_CC) $(CFLAGS) -Isrc -c -o $@ $<
+	$(SS_CC) $(CFLAGS) -MM $< -MT $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$^) > $@;
 
 $(OBJDIR)/%.o: 
 	@mkdir -p $(@D)
 	$(SS_CC) $(CFLAGS) -c -o $@ $(SRCDIR)/$*.c
 
-$(OBJDIR)/snippets/test_pool: $(OBJDIR)/snippets/test_pool.o $(OBJDIR)/pool.o
-	$(SS_LD) -o $@ $^ $(LDFLAGS)
-
-$(SS_BIN): $(OBJS)
-	$(SS_LD) $^ -o $@ $(LDFLAGS)
-
 clean:
+	rm -rf $(TARGETS)
 	rm -rf $(OBJDIR) $(OBJS)
-	rm -rf $(SS_BIN)
 
 depclean:
 	rm -rf $(SRCDIR)/*.d
