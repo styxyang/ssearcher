@@ -1,31 +1,21 @@
 # Makefile for testing program snippets
 
-# SNPT_SRC := filemagic.c file-mt.c
-# OBJDIR := ../obj/snippets
+SNIPPETS_BIN :=
 
-# SNPT_SRC := test_pool.c
-# SNPT_OBJ := $(SNPT_SRC:.c=.o)
-SNPT_SRCS := snippets/test_pool.c
-
-SNPT_OBJS += $(patsubst %,$(OBJDIR)/%,$(SNPT_SRCS:.c=.d))
-SNPT_BIN := obj/snippets/test_pool
-TARGETS += $(SNPT_BIN)
-
-# test:
-# 	echo $(SNPT_OBJS)
-
-$(OBJDIR)/snippets/%.o: snippets/%.c
-	@mkdir -p $(@D)
-	$(SS_CC) $(CFLAGS) -Isrc -c -o $@ $<
-
+##############################################
+# test_pool
+##############################################
+test_pool_SRC := snippets/test_pool.c
+test_pool_OBJ := $(patsubst %.c,$(OBJDIR)/%.o,$(test_pool_SRC))
+test_pool_BIN := test_pool
 
 # FIXME: ../pool.o is the prerequisition of make ..
-$(OBJDIR)/snippets/test_pool: $(OBJDIR)/snippets/test_pool.o $(OBJDIR)/pool.o
+$(test_pool_BIN): $(test_pool_OBJ) $(OBJDIR)/pool.o
 	$(SS_LD) -o $@ $^ $(LDFLAGS)
 
-# filemagic: filemagic.o
-# 	$(SS_CC) -o $@ $<
+SRCS += $(test_pool_SRC)
+TARGETS += $(test_pool_BIN)
 
-# file-mt: file-mt.o
-# 	$(SS_CC) -o $@ $<
-
+##############################################
+#
+##############################################

@@ -1,5 +1,5 @@
 #include "pool.h"
-#include "../src/debug.h"
+#include "debug.h"
 
 #include <stdio.h>
 #include <stdlib.h>
