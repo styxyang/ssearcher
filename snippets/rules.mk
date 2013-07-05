@@ -3,18 +3,18 @@
 SNIPPETS_BIN :=
 
 ##############################################
-# test_pool
+# test_worker
 ##############################################
-test_pool_SRC := snippets/test_pool.c
-test_pool_OBJ := $(patsubst %.c,$(OBJDIR)/%.o,$(test_pool_SRC))
-test_pool_BIN := test_pool
+test_worker_SRC := snippets/test_worker.c
+test_worker_OBJ := $(patsubst %.c,$(OBJDIR)/%.o,$(test_worker_SRC))
+test_worker_BIN := test_worker
 
-# FIXME: ../pool.o is the prerequisition of make ..
-$(test_pool_BIN): $(test_pool_OBJ) $(OBJDIR)/pool.o
+# FIXME: ../worker.o is the prerequisition of make ..
+$(test_worker_BIN): $(test_worker_OBJ) $(OBJDIR)/worker.o
 	$(SS_LD) -o $@ $^ $(LDFLAGS)
 
-SRCS += $(test_pool_SRC)
-TARGETS += $(test_pool_BIN)
+SRCS += $(test_worker_SRC)
+TARGETS += $(test_worker_BIN)
 
 ##############################################
 #

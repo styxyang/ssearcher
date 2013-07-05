@@ -55,4 +55,4 @@ depclean:
 	rm -rf $(DEPDIR)/*.d $(DEPDIR)
 
 test:
-	./test_pool
+	./test_worker

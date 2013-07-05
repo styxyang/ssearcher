@@ -1,4 +1,4 @@
-#include "pool.h"
+#include "worker.h"
 #include "debug.h"
 
 #include <assert.h>

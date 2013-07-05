@@ -3,7 +3,7 @@ TARGETS += ssearcher
 SRCS +=	options.c \
 	main.c \
 	match.c \
-	pool.c
+	worker.c
 
 OBJS += $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 
