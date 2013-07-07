@@ -17,7 +17,7 @@
 #ifdef DEBUG
 #define dprintf(level, fmt, ...)                                        \
     do {                                                                \
-        fprintf(stderr, level##_COLOR "[%s:%d] %s: " fmt "\e[0m",           \
+        fprintf(stderr, level##_COLOR "[%s:%d] %s: " fmt "\e[0m\n",     \
                 __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__);       \
     } while (0)
 #else
