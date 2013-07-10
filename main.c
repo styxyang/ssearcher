@@ -153,9 +153,8 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int))
     }
 }
 
-int main(int argc, char *argv[])
+int test_kmp(int argc, char *argv[])
 {
-#ifdef TEST_KMP
     if (argc < 2)
         return 1;
 
@@ -167,17 +166,17 @@ int main(int argc, char *argv[])
     printf("%s", str);
     char *pattern = "ab";
 
-    int pos = kmp(p, pattern);
+    int pos = kmp_match(p, strlen(p), pattern, 2);
     printf("%d\n", pos);
     snprintf(str, 10, "%s\n", p+pos+1);
     printf("%s", str);
     munmap(p, strlen(p));
     close(fd);
     return 0;
-#else
-    parse_options(argc, argv);
+}
 
-#ifndef TEST_DIR
+void test_file()
+{
     /* default to search in the current directory */
     if (!opt.input_file) {
         dprintf(ERROR, "err_exit");
@@ -196,7 +195,7 @@ int main(int argc, char *argv[])
     /* map the file to a space of 4K bytes */
     char *p;
     if ((p = mmap(0, 4096 * 1024, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
-        dprintf(EROR, "fail to map the file");
+        dprintf(ERROR, "fail to map the file");
         exit(-1);
     }
 
@@ -226,14 +225,25 @@ int main(int argc, char *argv[])
 
     munmap(p, 4096 * 1024);
     close(fd);
-#else
+}
+
+int main(int argc, char *argv[])
+{
+#if defined(TEST_KMP)
+    return test_kmp(argc, argv);
+#elif defined(TEST_DIR)
+    parse_options(argc, argv);
     if (!opt.input_dir) {
         dprintf(ERROR, "missing input_dir");
         exit(-1);
     }
     printf("search in %s\n", opt.input_dir);
     myftw(opt.input_dir, kmp_match);
-#endif
+    return 0;
+#elif defined(TEST_FILE)
+    parse_options(argc, argv);
+    test_file();
     return 0;
 #endif
+    return 0;
 }
