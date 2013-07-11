@@ -17,12 +17,12 @@
 #include <limits.h>
 
 #include <pthread.h>
+#include <sched.h>
+#include <poll.h>
 
 /* #define TEST_KMP */
 /* #define TEST_DIR */
 
-#define NCPU 2
-#define NTHR 3
 pthread_t pid[NTHR];
 /* int finish[2] = { 0, 0 }; */
 pthread_t mainthread;
@@ -225,7 +225,8 @@ void test_file()
 }
 
 int pipefd[2];
-char *ss_result[NCPU];
+/* char *ss_result[NCPU]; */
+int ss_result[NCPU][2];
 
 void ss_init()
 {
@@ -237,8 +238,15 @@ void ss_init()
     }
 
     /* FIXME: use ssmalloc? what if overflowed? */
+    /* for (i = 0; i < NCPU; i++) { */
+    /*     ss_result[i] = (char *)malloc(sizeof(char) * 4096); */
+    /* } */
+
     for (i = 0; i < NCPU; i++) {
-        ss_result[i] = (char *)malloc(sizeof(char) * 4096);
+        if (pipe(ss_result[i]) == -1) {
+            perror("pipe");
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
@@ -246,25 +254,63 @@ void ss_exit()
 {
     int i;
 
-    for (i = 0; i < NCPU; i++) {
-        free(ss_result[i]);
-    }
+    /* for (i = 0; i < NCPU; i++) { */
+    /*     free(ss_result[i]); */
+    /* } */
     close(pipefd[0]);
 }
 
 int ss_check_buffer()
 {
-    
+    int i;
+
+    struct pollfd fdset[NCPU];
+    memset(&fdset, 0, sizeof(fdset));
+
+    for (i = 0; i < NCPU; ++i) {
+        fdset[i].fd = ss_result[i][0];
+        fdset[i].events = POLLIN;
+        fdset[i].revents = 0;
+    }
+
+    while (1) {
+        static int cnt = 0;
+        /* dprintf(WARN, "cnt: %d", cnt++); */
+        int ret = poll(fdset, NCPU, 100);
+
+        if (ret > 0) {
+            if (fdset[0].revents & POLLIN) {
+                char result[256];
+                memset(result, 0, sizeof(result));
+                int n = read(fdset[0].fd, result, sizeof(result));
+                if (n == 0)
+                    return 0;
+                dprintf(WARN, "%s\n", result);
+                /* read from readfd, 
+                   since you can read from it without being blocked */
+            }
+            /* if (fdset[1].revents & POLLOUT) { */
+            /*     /\* write to writefd, */
+            /*        since you can write to it without being blocked *\/ */
+            /* } */
+        } else if (ret == 0) {
+            /* return -1; */
+            /* the poll has timed out, nothing can be read or written */
+        } else {
+            /* the poll failed */
+            perror("poll failed");
+            return -1;
+        }
+        sched_yield();
+    }
 }
 
 void test_procon()
 {
     pthread_create(&pid[0], NULL, ss_dispatcher_thread, NULL);
-    pthread_create(&pid[1], NULL, ss_worker_thread, NULL);
+    pthread_create(&pid[1], NULL, ss_worker_thread, (void *)0);
     /* pthread_create(&pid[2], NULL, ss_worker_thread, NULL); */
-    /* while (ss_check_buffer()) { */
-    /*     cpu_relax(); */
-    /* } */
+    ss_check_buffer();
     pthread_join(pid[0], NULL);
     pthread_join(pid[1], NULL);
 }

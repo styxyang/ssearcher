@@ -7,18 +7,16 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <sched.h>
 
 extern int pipefd[2];
-
-#define cpu_relax()                             \
-    do {                                        \
-        asm volatile("pause\n": : :"memory");   \
-    } while (0)
+extern int ss_result[NCPU][2];
 
 void *ss_worker_thread(void *arg)
 {
-    ssize_t n;
+    ssize_t n, r;
     int     fd;
+    int     tid = (int)arg;
 
     /* loop to read opened file descriptors from pipe */
     while ((n = read(pipefd[0], &fd, sizeof(int))) != 0) {
@@ -29,11 +27,18 @@ void *ss_worker_thread(void *arg)
 
         char buf[16];
         memset(buf, 0, sizeof(buf));
-        read(fd, buf, sizeof(buf) - 1);
-        dprintf(INFO, "%s\n", buf);
+
+        /* TODO: mmap file for string matching */
+        r = read(fd, buf, sizeof(buf) - 1);
+        dprintf(INFO, "write to result pipe\n");
+        write(ss_result[tid][1], buf, r);
+        write(ss_result[tid][1], "\28", 1);
         close(fd);
+        cpu_relax();
+        /* sched_yield(); */
     }
 
+    close(ss_result[tid][1]);
     pthread_exit(0);
 }
 
@@ -69,8 +74,9 @@ void *ss_dispatcher_thread(void *arg)
             if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) {
                 perror("write pipefd\n");
             }
-            cpu_relax();
         }
+        /* cpu_relax(); */
+        sched_yield();
     }
 
     close(pipefd[1]);

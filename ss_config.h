@@ -5,6 +5,9 @@
 typedef unsigned long int uint64_t;
 typedef unsigned char     uint8_t;
 
+#define NCPU 1
+#define NTHR 2
+
 typedef struct th_arg {
     char *pstart;
     int   text_len;

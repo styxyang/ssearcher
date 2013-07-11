@@ -14,8 +14,6 @@
 #include <pthread.h>
 #include <sched.h>                      /* pthread_yield missing on OSX */
 
-#define cpu_relax() asm volatile("pause\n": : :"memory")
-
 int fd0[2];
 int fd1[2];
 
