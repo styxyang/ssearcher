@@ -1,5 +1,5 @@
-#include "worker.h"
-#include "debug.h"
+#include "ss_thread.h"
+#include "ss_debug.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +17,7 @@ void *simple(void *arg)
 int main(int argc, char *argv[])
 {
     g_flag = 0;
-    thread_pool_init();
+    ss_dispatcher_thread();
     sleep(1);
     /* pthread_cond_broadcast(&cond); */
     thread_add_task(simple, NULL);

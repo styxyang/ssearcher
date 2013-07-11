@@ -1,5 +1,5 @@
-#include "worker.h"
-#include "debug.h"
+#include "ss_thread.h"
+#include "ss_debug.h"
 
 #include <stdio.h>
 #include <stdlib.h>

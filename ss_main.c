@@ -1,7 +1,8 @@
-#include "config.h"
-#include "options.h"
-#include "match.h"
-#include "debug.h"
+#include "ss_config.h"
+#include "ss_options.h"
+#include "ss_match.h"
+#include "ss_debug.h"
+#include "ss_thread.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -125,12 +126,6 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int))
                 } else {
                     continue;
                 }
-                /* if (arg.result < 0) { */
-                /*     break; */
-                /* } else { */
-                /*     pos += arg.result + pat_len; */
-                /*     printf("pos: %d -- %.*s\n", pos, 20, p + pos - pat_len); */
-                /* } */
 #else
                 int result = fn(p + pos, text_len - pos, pattern, pat_len);
                 if (result < 0) {
@@ -227,6 +222,11 @@ void test_file()
     close(fd);
 }
 
+void test_procon()
+{
+    ss_dispatcher_thread();
+}
+
 int main(int argc, char *argv[])
 {
 #if defined(TEST_KMP)
@@ -244,6 +244,8 @@ int main(int argc, char *argv[])
     parse_options(argc, argv);
     test_file();
     return 0;
-#endif
+#elif defined(TEST_PROCON)
+    test_procon();
     return 0;
+#endif
 }

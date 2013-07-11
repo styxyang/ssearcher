@@ -1,5 +1,5 @@
-#include "worker.h"
-#include "debug.h"
+#include "ss_thread.h"
+#include "ss_debug.h"
 
 #include <assert.h>
 #include <string.h>
@@ -77,7 +77,7 @@ static void *thread_pool_wrapper(void *arg)
     }
 }
 
-void thread_pool_init()
+void ss_dispatcher_thread()
 {
     uint64_t i;
 

@@ -1,7 +1,7 @@
 #ifndef SS_OPTIONS_H
 #define SS_OPTIONS_H
 
-#include "debug.h"
+#include "ss_debug.h"
 
 #define SM_ALGO_KMP 0
 

@@ -1,5 +1,5 @@
-#include "options.h"
-#include "debug.h"
+#include "ss_options.h"
+#include "ss_debug.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -1,7 +1,7 @@
 #ifndef SS_POOL_H_
 #define SS_POOL_H_
 
-#include "config.h"
+#include "ss_config.h"
 
 #include <pthread.h>
 
@@ -22,7 +22,7 @@ typedef struct {
 } thread_pool;
 
 
-void thread_pool_init();
+void ss_dispatcher_thread();
 void thread_pool_destroy();
 void thread_add_task(void *(*callback)(void *), void *arg);
 
