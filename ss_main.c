@@ -237,7 +237,7 @@ void ss_init()
     }
 
     /* FIXME: use ssmalloc? what if overflowed? */
-    for (i = 0; i < sizeof(ss_result); i++) {
+    for (i = 0; i < NCPU; i++) {
         ss_result[i] = (char *)malloc(sizeof(char) * 4096);
     }
 }
@@ -246,7 +246,7 @@ void ss_exit()
 {
     int i;
 
-    for (i = 0; i < sizeof(ss_result); i++) {
+    for (i = 0; i < NCPU; i++) {
         free(ss_result[i]);
     }
     close(pipefd[0]);
@@ -266,6 +266,7 @@ void test_procon()
     /*     cpu_relax(); */
     /* } */
     pthread_join(pid[0], NULL);
+    pthread_join(pid[1], NULL);
 }
 
 
