@@ -14,4 +14,6 @@ typedef struct th_arg {
     int   result;
 } thread_arg;
 
+#define TEST_PROCON
+
 #endif /* _CONFIG_H_ */

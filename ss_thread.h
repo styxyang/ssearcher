@@ -22,7 +22,11 @@ typedef struct {
 } thread_pool;
 
 
+#if defined(TEST_PROCON)
+void *ss_dispatcher_thread(void *);
+#else
 void ss_dispatcher_thread();
+#endif  /* TEST_PROCON */
 void thread_pool_destroy();
 void thread_add_task(void *(*callback)(void *), void *arg);
 

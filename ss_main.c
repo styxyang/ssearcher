@@ -19,7 +19,7 @@
 #include <pthread.h>
 
 /* #define TEST_KMP */
-#define TEST_DIR
+/* #define TEST_DIR */
 
 pthread_t pid[2];
 int finish[2] = { 0, 0 };
@@ -222,9 +222,25 @@ void test_file()
     close(fd);
 }
 
+int pipefd[2];
+
+void ss_init()
+{
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void ss_exit()
+{
+    close(pipefd[0]);
+}
+
 void test_procon()
 {
-    ss_dispatcher_thread();
+    pthread_create(&pid[0], NULL, ss_dispatcher_thread, NULL);
+    pthread_join(pid[0], NULL);
 }
 
 int main(int argc, char *argv[])
@@ -245,6 +261,7 @@ int main(int argc, char *argv[])
     test_file();
     return 0;
 #elif defined(TEST_PROCON)
+    ss_init();
     test_procon();
     return 0;
 #endif
