@@ -21,8 +21,10 @@
 /* #define TEST_KMP */
 /* #define TEST_DIR */
 
-pthread_t pid[2];
-int finish[2] = { 0, 0 };
+#define NCPU 2
+#define NTHR 3
+pthread_t pid[NTHR];
+/* int finish[2] = { 0, 0 }; */
 pthread_t mainthread;
 
 #ifdef USE_PTHREAD
@@ -223,25 +225,49 @@ void test_file()
 }
 
 int pipefd[2];
+char *ss_result[NCPU];
 
 void ss_init()
 {
+    int i;
+
     if (pipe(pipefd) == -1) {
         perror("pipe");
         exit(EXIT_FAILURE);
+    }
+
+    /* FIXME: use ssmalloc? what if overflowed? */
+    for (i = 0; i < sizeof(ss_result); i++) {
+        ss_result[i] = (char *)malloc(sizeof(char) * 4096);
     }
 }
 
 void ss_exit()
 {
+    int i;
+
+    for (i = 0; i < sizeof(ss_result); i++) {
+        free(ss_result[i]);
+    }
     close(pipefd[0]);
+}
+
+int ss_check_buffer()
+{
+    
 }
 
 void test_procon()
 {
     pthread_create(&pid[0], NULL, ss_dispatcher_thread, NULL);
+    pthread_create(&pid[1], NULL, ss_worker_thread, NULL);
+    /* pthread_create(&pid[2], NULL, ss_worker_thread, NULL); */
+    /* while (ss_check_buffer()) { */
+    /*     cpu_relax(); */
+    /* } */
     pthread_join(pid[0], NULL);
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -263,6 +289,7 @@ int main(int argc, char *argv[])
 #elif defined(TEST_PROCON)
     ss_init();
     test_procon();
+    ss_exit();
     return 0;
 #endif
 }
