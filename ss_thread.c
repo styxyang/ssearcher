@@ -21,7 +21,8 @@ void *ss_worker_thread(void *arg)
     /* loop to read opened file descriptors from pipe */
     while ((n = read(pipefd[0], &fd, sizeof(int))) != 0) {
         if (n != sizeof(int)) {
-            cpu_relax();
+            /* cpu_relax(); */
+            sched_yield();
             continue;
         }
 
@@ -32,14 +33,15 @@ void *ss_worker_thread(void *arg)
         r = read(fd, buf, sizeof(buf) - 1);
         dprintf(INFO, "write to result pipe\n");
         write(ss_result[tid][1], buf, r);
-        write(ss_result[tid][1], "\28", 1);
+        /* write(ss_result[tid][1], "\28", 1); */
         close(fd);
-        cpu_relax();
-        /* sched_yield(); */
+        /* cpu_relax(); */
+        sched_yield();
     }
 
     close(ss_result[tid][1]);
-    pthread_exit(0);
+    dprintf(INFO, "ss_result[%d][1] closed", tid);
+    return 0;
 }
 
 void *ss_dispatcher_thread(void *arg)
@@ -51,7 +53,7 @@ void *ss_dispatcher_thread(void *arg)
     dprintf(INFO, "dispatcher");
     if ((d = opendir("./")) == NULL) {
         fprintf(stdout, "opendir failed\n");
-        pthread_exit(0);
+        return 0;
     }
 
     dprintf(INFO, "open dir: .");
@@ -67,7 +69,7 @@ void *ss_dispatcher_thread(void *arg)
             int fd;
             if ((fd = open(fullpath, O_RDONLY)) == -1) {
                 dprintf(ERROR, "fail to open file for read: %s", fullpath);
-                pthread_exit(0);
+                return 0;
             }
             
             dprintf(INFO, "open file: %s\n", fullpath);
@@ -83,8 +85,7 @@ void *ss_dispatcher_thread(void *arg)
 
     if (closedir(d) < 0) {
         dprintf(ERROR, "closedir failed");
-        pthread_exit(0);
     }
-    pthread_exit(0);
+    return 0;
 }
 

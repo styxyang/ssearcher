@@ -285,7 +285,7 @@ int ss_check_buffer()
                 int n = read(fdset[0].fd, result, sizeof(result));
                 if (n == 0)
                     return 0;
-                dprintf(WARN, "%s\n", result);
+                dprintf(WARN, "[%u]%s\n", strlen(result), result);
                 /* read from readfd, 
                    since you can read from it without being blocked */
             }
@@ -293,11 +293,20 @@ int ss_check_buffer()
             /*     /\* write to writefd, */
             /*        since you can write to it without being blocked *\/ */
             /* } */
+            if (fdset[0].revents & POLLERR)
+                dprintf(ERROR, "POLLERR");
+            if (fdset[0].revents & POLLHUP) {
+                return -1;
+            }
+            if (fdset[0].revents & POLLNVAL)
+                dprintf(ERROR, "POLLNVAL");
         } else if (ret == 0) {
+            dprintf(ERROR, "ret = 0");
             /* return -1; */
             /* the poll has timed out, nothing can be read or written */
         } else {
             /* the poll failed */
+            dprintf(ERROR, "ret < 0");
             perror("poll failed");
             return -1;
         }
