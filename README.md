@@ -23,6 +23,6 @@ Or using `autoconf`:
 
 - KMP string matching
 - LCRQ
-  - [Fast Concurrent Queues for x86 Processors](http://dl.acm.org/citation.cfm?id=2442527)
-  - Adam Morrison, Yehuda Afek [pdf](http://www.cs.tau.ac.il/~adamx/g.php?link=http://www.cs.tau.ac.il/~adamx/ppopp2013-x86queues.pdf)
+  - [Fast Concurrent Queues for x86 Processors](http://dl.acm.org/citation.cfm?id=2442527) _PPoPP 2013_
+  - Adam Morrison, Yehuda Afek [Download pdf](http://www.cs.tau.ac.il/~adamx/g.php?link=http://www.cs.tau.ac.il/~adamx/ppopp2013-x86queues.pdf)
     
