@@ -5,6 +5,15 @@
 typedef unsigned long int uint64_t;
 typedef unsigned char     uint8_t;
 
+#ifndef __cplusplus
+#  ifndef true
+#    define true (1)
+#  endif
+#  ifndef false
+#    define false (0)
+#  endif
+#endif
+
 #define NCPU 1
 #define NTHR 2
 
