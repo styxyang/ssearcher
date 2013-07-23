@@ -1,4 +1,5 @@
 #include "trie.h"
+#include "../ss_config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,9 +31,10 @@ struct trie *trie_insert(struct trie *root, int *hex, int size)
         }
         node = node->children[idx];
     }
-    node->isleaf = 1;
+    node->isleaf = true;
 
     /* deal with the last node */
+    return node->isleaf?node:NULL;
 }
 
 /* could be reused in trie_insert with a bit of whether allocating memory */
