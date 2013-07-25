@@ -2,11 +2,15 @@
 #define _CONFIG_H_
 
 /* #define USE_PTHREAD */
-typedef unsigned long int uint64_t;
-typedef unsigned char     uint8_t;
-typedef unsigned char     bool;
+#ifndef uint64_t
+typedef unsigned long long uint64_t;
+#endif
 
+#ifndef uint8_t
+typedef unsigned char     uint8_t;
+#endif
 #ifndef __cplusplus
+typedef unsigned char     bool;
 #  ifndef true
 #    define true (1)
 #  endif

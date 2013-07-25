@@ -4,7 +4,7 @@
 # Copyright (c) 2013 by Yang Hong <hy dot styx at gmail dot com>
 #
 
-SUBDIR := snippets
+SUBDIR := snippets test
 OBJDIR := obj
 DEPDIR := dep
 UNAME_S := $(shell uname -s)
@@ -48,7 +48,7 @@ $(OBJDIR)/%.o: %.c
 	$(SS_CC) $(CFLAGS) -I. -c $< -o $@
 
 clean:
-	rm -rf $(TARGETS)
+	rm -rf $(TARGETS) $(TEST_SUITE)
 	rm -rf $(OBJDIR) $(OBJS)
 	rm -rf gtest/build
 
@@ -56,5 +56,5 @@ depclean:
 	rm -rf $(DEPDIR)/*.d $(DEPDIR)
 
 test:
-	@mkdir -p gtest/build
-	@cd gtest/build; cmake ..; make
+
+test-all:
