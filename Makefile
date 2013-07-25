@@ -50,9 +50,11 @@ $(OBJDIR)/%.o: %.c
 clean:
 	rm -rf $(TARGETS)
 	rm -rf $(OBJDIR) $(OBJS)
+	rm -rf gtest/build
 
 depclean:
 	rm -rf $(DEPDIR)/*.d $(DEPDIR)
 
 test:
-	./test_pipe
+	@mkdir -p gtest/build
+	@cd gtest/build; cmake ..; make
