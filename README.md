@@ -7,7 +7,7 @@ another simple searcher designed for local text files
 
 ### Build
 
-Using my Makefile (recomended), simply `make`
+Using my Makefile (recomended), simply [`make`](Makefile)
 
     make
 
