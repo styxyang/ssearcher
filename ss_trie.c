@@ -17,41 +17,48 @@ struct trie *trie_init(struct trie **root)
     return *root;
 }
 
-struct trie *trie_insert(struct trie *root, int *hex, int size)
+static struct trie *trie_walk(struct trie *root, uint8_t *target, int size, bool create)
 {
-    assert(size > 0);
-    assert(hex != NULL);
-
     int i = 0;
     struct trie *node = root;
     for (; i < size; i++) {
-        int idx = hex[i];
+        int idx = target[i];
         if (node->children[idx] == NULL) {
-            trie_init(&node->children[idx]);
+            if (create) {
+                trie_init(&node->children[idx]);
+            } else {
+                return NULL;
+            }
         }
         node = node->children[idx];
     }
-    node->isleaf = true;
 
+    if (create) {
+        if (node->isleaf)
+            return NULL;
+        node->isleaf = true;
+    }
+    return node->isleaf?node:NULL;
+}
+
+struct trie *trie_insert(struct trie *root, uint8_t *target, int size)
+{
+    assert(root);
+    assert(size > 0);
+    assert(target);
+ 
+    return trie_walk(root, target, size, true);
     /* deal with the last node */
 }
 
 /* could be reused in trie_insert with a bit of whether allocating memory */
-struct trie *trie_lookup(struct trie *root, int *hex, int size)
+struct trie *trie_lookup(struct trie *root, uint8_t *target, int size)
 {
-    assert(root != NULL);
+    assert(root);
     assert(size > 0);
-    assert(hex != NULL);
+    assert(target);
 
-    int i;
-    struct trie *node = root;
-    for (i = 0; i < size; i++) {
-        int idx = hex[i];
-        if (node->children[idx] == NULL)
-            return NULL;
-        node = node->children[idx];
-    }
-    return node->isleaf?node:NULL;
+    return trie_walk(root, target, size, false);
 }
 
 void trie_destroy(struct trie *root)
@@ -63,30 +70,3 @@ void trie_destroy(struct trie *root)
     }
     free(root);
 }
-
-/*****************/
-/* Example usage */
-/*****************/
-
-/* int main(int argc, char *argv[]) */
-/* { */
-/*     struct trie *tr = NULL; */
-
-/*     trie_init(&tr); */
-
-/*     int arr0[] = {0x8, 0xf, 0x3}; */
-/*     int arr1[] = {0x7, 0xD, 0xF}; */
-/*     int arr2[] = {0x0, 0x0, 0xF}; */
-/*     int arr3[] = {0xd, 0x4, 0x0}; */
-/*     trie_insert(tr, arr0, 3); */
-/*     trie_insert(tr, arr1, 3); */
-/*     trie_insert(tr, arr2, 3); */
-
-/*     assert(trie_lookup(tr, arr0, 3) != NULL); */
-/*     assert(trie_lookup(tr, arr1, 3) != NULL); */
-/*     assert(trie_lookup(tr, arr2, 3) != NULL); */
-/*     assert(trie_lookup(tr, arr3, 3) == NULL); */
-
-/*     trie_destroy(tr); */
-/*     return 0; */
-/* } */

@@ -4,6 +4,7 @@
 /* #define USE_PTHREAD */
 typedef unsigned long int uint64_t;
 typedef unsigned char     uint8_t;
+typedef unsigned char     bool;
 
 #ifndef __cplusplus
 #  ifndef true
