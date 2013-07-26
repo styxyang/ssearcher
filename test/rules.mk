@@ -1,4 +1,4 @@
-TEST_LIB := -lgtest_main -lgtest
+TEST_LIB := -lgtest_main -lgtest -pthread
 
 TEST_trie := test_trie
 
