@@ -4,16 +4,20 @@
 # Copyright (c) 2013 by Yang Hong <hy dot styx at gmail dot com>
 #
 
-SUBDIR := snippets test
+SUBDIR := snippets tests
 OBJDIR := obj
 DEPDIR := dep
 UNAME_S := $(shell uname -s)
+
+# test environment variables
+TEST_HEADERS := -I. -Igtest/include
+TEST_LD_PATH := -Lgtest/build
+TEST_LDFLAGS := -lgtest_main -lgtest -pthread
 
 SRCS :=
 OBJS :=
 
 TARGETS :=
-TEST_SUITE :=
 
 .PHONY: default clean depclean test-build-env test
 
@@ -49,7 +53,7 @@ $(OBJDIR)/%.o: %.c
 	$(SS_CC) $(CFLAGS) -I. -c $< -o $@
 
 clean:
-	rm -rf $(TARGETS) $(TEST_SUITE)
+	rm -rf $(TARGETS) $(TEST_SUITE) *.dSYM
 	rm -rf $(OBJDIR) $(OBJS)
 	rm -rf gtest/build
 

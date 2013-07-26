@@ -35,13 +35,13 @@ TEST_F(TrieTest, insertelement)
     for (i = 0; i < cnt; i++) {
         array[i] = rand() % 16;
     }
-    trie_insert(tr, array, cnt);
-    EXPECT_EQ(trie_insert(tr, array, cnt), (void *)NULL);  /* can't insert same entry twice */
+    EXPECT_NE(trie_insert(tr, array, cnt), (void *)NULL);  // make sure the entry is inserted
+    EXPECT_EQ(trie_insert(tr, array, cnt), (void *)NULL);  // can't insert same entry twice
 
-    // assert(trie_lookup(tr, array, cnt));  /* make sure it can be found */
+    EXPECT_NE(trie_lookup(tr, array, cnt), (void *)NULL);  /* make sure it can be found */
 
-    // array[i-1]++;
-    // assert(trie_lookup(tr, array, cnt) == NULL);  /* can't found a modified entry */
+    array[i-1]++;
+    EXPECT_EQ(trie_lookup(tr, array, cnt), (void *)NULL);  /* can't found a modified entry */
 
     free(array);
 }

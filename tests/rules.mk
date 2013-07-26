@@ -1,8 +1,9 @@
-TEST_LIB := -lgtest_main -lgtest -pthread
+# 
+# Add unit test here using Google C++ Testing Framework
+# 
+# Follow the example to add more unit tests
 
-TEST_trie := test_trie
+test_trie: tests/test_trie.cpp ss_trie.o
+	$(SS_CXX) $(CFLAGS) $(TEST_HEADERS) $(TEST_LD_PATH) -o $@ $^ $(TEST_LDFLAGS)
 
-test_trie: ss_trie.o
-	g++ -g -O0 -I. -Igtest/include -Lgtest/build -o $@ test/$@.cpp $(TEST_LIB) $^
-
-TEST_SUITE += $(TEST_trie)
+TEST_SUITE := test_trie
