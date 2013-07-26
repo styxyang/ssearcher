@@ -15,7 +15,7 @@ OBJS :=
 TARGETS :=
 TEST_SUITE :=
 
-.PHONY: default clean depclean test
+.PHONY: default clean depclean test-build-env test
 
 # Make sure that 'default' is the first target
 default:
@@ -60,14 +60,11 @@ test-build-env:
 	@mkdir -p gtest/build
 	@cd gtest/build; cmake ..; make
 
-# TEST_SUITE := $(patsubst %,%.t,$(TEST_BIN))
+# $(TEST_SUITE): test-build-env wouldn't work because that
+# will add `test-build-env' as a prerequisite to
+# each of $(TEST_SUITE) and cause `$^' in other rules
+# containing `test-build-env'
+$(TEST_SUITE): | test-build-env
 
-# test-all: $(TEST_SUITE)
-
-# .PHONY: $(TEST_SUITE)
-
-# $(TEST_SUITE): $(TEST_BIN)
-# 	@./$(patsubst %.t,%,$@)
-
-test:
+test: $(TEST_SUITE)
 	@perl -e 'map { system("./$$_") == 0 or die "fail to run test $$_" } @ARGV' $(TEST_SUITE)
