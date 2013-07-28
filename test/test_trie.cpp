@@ -3,7 +3,7 @@
 extern "C" {
 #include "ss_config.h"
 #include "ss_trie.h"
-#include "magic.h"
+#include "ss_magic.h"
 }
 
 using namespace std;

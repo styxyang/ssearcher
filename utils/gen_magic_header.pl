@@ -7,8 +7,8 @@ use strict;
 use Data::Dumper;
 
 my $magic_defs = "magic_defs";
-my $magic_tmpl = "magic.c.tmpl";
-my $magic_src = "magic.c";
+my $magic_tmpl = "ss_magic.c.tmpl";
+my $magic_src = "ss_magic.c";
 my %magic_map;			# map of hexcode to name
 
 open MAGIC_DEFS, "<", $magic_defs;

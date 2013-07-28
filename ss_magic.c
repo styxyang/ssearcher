@@ -1,4 +1,5 @@
-#include "magic.h"
+#include "ss_config.h"
+#include "ss_magic.h"
 
 #define M_3GPP_FTYP        0x0000001466747970
 #define M_MP4_FTYP         0x0000001866747970
