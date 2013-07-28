@@ -17,7 +17,7 @@ struct trie *trie_init(struct trie **root)
     return *root;
 }
 
-static struct trie *trie_walk(struct trie *root, uint32_t *target, int size, bool create)
+static struct trie *trie_walk(struct trie *root, uint32_t *target, int size, bool create, bool scan)
 {
     int i = 0;
     struct trie *node = root;
@@ -31,6 +31,9 @@ static struct trie *trie_walk(struct trie *root, uint32_t *target, int size, boo
             }
         }
         node = node->children[idx];
+        if (scan && node->isleaf) {
+            return node;
+        }
     }
 
     if (create) {
@@ -47,7 +50,7 @@ struct trie *trie_insert(struct trie *root, uint32_t *target, int size)
     assert(size > 0);
     assert(target);
  
-    return trie_walk(root, target, size, true);
+    return trie_walk(root, target, size, true, false);
     /* deal with the last node */
 }
 
@@ -58,7 +61,16 @@ struct trie *trie_lookup(struct trie *root, uint32_t *target, int size)
     assert(size > 0);
     assert(target);
 
-    return trie_walk(root, target, size, false);
+    return trie_walk(root, target, size, false, false);
+}
+
+struct trie *trie_scan(struct trie *root, uint32_t *target, int size)
+{
+    assert(root);
+    assert(size > 0);
+    assert(target);
+
+    return trie_walk(root, target, size, false, true);
 }
 
 void trie_destroy(struct trie *root)

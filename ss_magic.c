@@ -1,5 +1,6 @@
 #include "ss_config.h"
 #include "ss_magic.h"
+#include "ss_trie.h"
 
 #define M_3GPP_FTYP        0x0000001466747970
 #define M_MP4_FTYP         0x0000001866747970
@@ -75,7 +76,24 @@ static uint32_t magic_index[][MENTRY_LEN + 1] = {
     {0x0FF, 0x0FE, 0x000, 0x000, 0x100, 0x100, 0x100, 0x100, 4}
 };
 
-int query_magic()
+static struct trie *tr;
+
+void magic_init()
 {
-    return 0;
+    int i;
+
+    trie_init(&tr);
+    for (i = 0; i < sizeof(magic_index) / (MENTRY_LEN + 1) / sizeof(uint32_t); ++i) {
+        trie_insert(tr, &magic_index[i][0], magic_index[i][8]);
+    }
+}
+
+void magic_fini()
+{
+    trie_destroy(tr);
+}
+
+bool magic_scan(uint32_t *buf, int len)
+{
+    return trie_scan(tr, buf, len)?true:false;
 }

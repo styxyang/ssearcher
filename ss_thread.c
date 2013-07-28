@@ -1,4 +1,6 @@
+#include "ss_config.h"
 #include "ss_thread.h"
+#include "ss_magic.h"
 #include "ss_debug.h"
 
 #include <assert.h>
@@ -50,6 +52,8 @@ void *ss_dispatcher_thread(void *arg)
     DIR           *d;
     struct dirent *entry;
 
+    magic_init();
+
     dprintf(INFO, "dispatcher");
     if ((d = opendir("./")) == NULL) {
         fprintf(stdout, "opendir failed\n");
@@ -73,6 +77,25 @@ void *ss_dispatcher_thread(void *arg)
             }
             
             dprintf(INFO, "open file: %s\n", fullpath);
+
+            /* test whether the file is binary */
+            char buf[8];
+            read(fd, buf, sizeof(buf));
+            uint32_t magic_buf[8];
+            sscanf(buf, "%c%c%c%c%c%c%c%c", &magic_buf[0], &magic_buf[1],
+                   &magic_buf[2], &magic_buf[3], &magic_buf[4], &magic_buf[5],
+                   &magic_buf[6], &magic_buf[7]);
+            int i;
+            for (i = 0; i < 8; ++i) {
+                printf("%d", magic_buf[i]);
+            }
+            printf("\n");
+            /* close binary file */
+            if (magic_scan(magic_buf, 8)) {
+                dprintf(WARN, "close binary %s", fullpath);
+                close(fd);
+                continue;
+            }
             if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) {
                 perror("write pipefd\n");
             }
@@ -86,6 +109,9 @@ void *ss_dispatcher_thread(void *arg)
     if (closedir(d) < 0) {
         dprintf(ERROR, "closedir failed");
     }
+
+    magic_fini();
+
     return 0;
 }
 
