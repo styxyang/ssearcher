@@ -49,7 +49,7 @@ foreach my $key (sort keys %magic_map) {
 # }
 # print MAGIC_SRC "};\n\n";
 print MAGIC_SRC "\nstatic uint32_t magic_index[][MENTRY_LEN + 1] = {";
-print MAGIC_SRC join(", ", @def);
+print MAGIC_SRC join(",", @def);
 print MAGIC_SRC "\n};\n\n";
 
 
