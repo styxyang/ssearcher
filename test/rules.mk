@@ -3,7 +3,7 @@
 # 
 # Follow the example to add more unit tests
 
-test_trie: tests/test_trie.cpp ss_trie.o
+test_trie: test/test_trie.cpp ss_trie.o
 	$(SS_CXX) $(CFLAGS) $(TEST_HEADERS) $(TEST_LD_PATH) -o $@ $^ $(TEST_LDFLAGS)
 
 TEST_SUITE := test_trie

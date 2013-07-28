@@ -17,12 +17,12 @@ struct trie *trie_init(struct trie **root)
     return *root;
 }
 
-static struct trie *trie_walk(struct trie *root, uint8_t *target, int size, bool create)
+static struct trie *trie_walk(struct trie *root, uint32_t *target, int size, bool create)
 {
     int i = 0;
     struct trie *node = root;
     for (; i < size; i++) {
-        int idx = target[i];
+        uint32_t idx = target[i];
         if (node->children[idx] == NULL) {
             if (create) {
                 trie_init(&node->children[idx]);
@@ -41,7 +41,7 @@ static struct trie *trie_walk(struct trie *root, uint8_t *target, int size, bool
     return node->isleaf?node:NULL;
 }
 
-struct trie *trie_insert(struct trie *root, uint8_t *target, int size)
+struct trie *trie_insert(struct trie *root, uint32_t *target, int size)
 {
     assert(root);
     assert(size > 0);
@@ -52,7 +52,7 @@ struct trie *trie_insert(struct trie *root, uint8_t *target, int size)
 }
 
 /* could be reused in trie_insert with a bit of whether allocating memory */
-struct trie *trie_lookup(struct trie *root, uint8_t *target, int size)
+struct trie *trie_lookup(struct trie *root, uint32_t *target, int size)
 {
     assert(root);
     assert(size > 0);
