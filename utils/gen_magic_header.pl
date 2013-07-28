@@ -32,9 +32,9 @@ my @def;
 foreach my $key (sort keys %magic_map) {
   my @output = ($key =~ m/.{2}/g);
   # print Dumper \@output;
-  @output = map { "0x0".$_ } @output;
+  @output = map { "0x".$_ } @output;
   my $len = scalar @output;
-  push(@output, "0x100") for (0..(8 - $len - 1));
+  push(@output, "0x00") for (0..(8 - $len - 1));
   push(@output, $len);
   push @def, "\n    {".join(", ", @output)."}";
   printf MAGIC_SRC "#define M_%s%*s0x%s\n", $magic_map{$key}, 16 - length($magic_map{$key}) + 1, " ", $key;
@@ -48,7 +48,7 @@ foreach my $key (sort keys %magic_map) {
 #   print MAGIC_SRC "    [0x$1] = M_$magic_map{$key};\n";
 # }
 # print MAGIC_SRC "};\n\n";
-print MAGIC_SRC "\nstatic uint32_t magic_index[][MENTRY_LEN + 1] = {";
+print MAGIC_SRC "\nstatic uint8_t magic_index[][MENTRY_LEN + 1] = {";
 print MAGIC_SRC join(",", @def);
 print MAGIC_SRC "\n};\n\n";
 

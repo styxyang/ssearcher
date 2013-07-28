@@ -1,4 +1,4 @@
-TARGETS += ssearcher
+TARGETS += ss
 
 SRCS +=	ss_options.c	\
 	ss_main.c	\
@@ -7,8 +7,11 @@ SRCS +=	ss_options.c	\
 	ss_trie.c	\
 	ss_magic.c
 
+ss_magic.c: ss_magic.c.tmpl
+	@utils/gen_magic_header.pl
+
 OBJS += $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 
-ssearcher: $(OBJS)
+ss: $(OBJS)
 	$(SS_LD) $^ -o $@ $(LDFLAGS)
 

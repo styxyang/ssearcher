@@ -18,7 +18,7 @@ void *ss_worker_thread(void *arg)
 {
     ssize_t n, r;
     int     fd;
-    int     tid = (int)arg;
+    long    tid = (long)arg;
 
     /* loop to read opened file descriptors from pipe */
     while ((n = read(pipefd[0], &fd, sizeof(int))) != 0) {
@@ -42,7 +42,7 @@ void *ss_worker_thread(void *arg)
     }
 
     close(ss_result[tid][1]);
-    dprintf(INFO, "ss_result[%d][1] closed", tid);
+    dprintf(INFO, "ss_result[%ld][1] closed", tid);
     return 0;
 }
 
@@ -79,19 +79,8 @@ void *ss_dispatcher_thread(void *arg)
             dprintf(INFO, "open file: %s\n", fullpath);
 
             /* test whether the file is binary */
-            char buf[8];
-            read(fd, buf, sizeof(buf));
-            uint32_t magic_buf[8];
-            sscanf(buf, "%c%c%c%c%c%c%c%c", &magic_buf[0], &magic_buf[1],
-                   &magic_buf[2], &magic_buf[3], &magic_buf[4], &magic_buf[5],
-                   &magic_buf[6], &magic_buf[7]);
-            int i;
-            for (i = 0; i < 8; ++i) {
-                printf("%d", magic_buf[i]);
-            }
-            printf("\n");
-            /* close binary file */
-            if (magic_scan(magic_buf, 8)) {
+            /* and close binary file */
+            if (magic_scan(fd)) {
                 dprintf(WARN, "close binary %s", fullpath);
                 close(fd);
                 continue;

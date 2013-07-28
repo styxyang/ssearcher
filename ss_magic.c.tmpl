@@ -1,6 +1,10 @@
 #include "ss_config.h"
+#include "ss_debug.h"
 #include "ss_magic.h"
 #include "ss_trie.h"
+
+#include <stdio.h>
+#include <unistd.h>
 
 static struct trie *tr;
 
@@ -9,7 +13,7 @@ void magic_init()
     int i;
 
     trie_init(&tr);
-    for (i = 0; i < sizeof(magic_index) / (MENTRY_LEN + 1) / sizeof(uint32_t); ++i) {
+    for (i = 0; i < sizeof(magic_index) / (MENTRY_LEN + 1) / sizeof(uint8_t); ++i) {
         trie_insert(tr, &magic_index[i][0], magic_index[i][8]);
     }
 }
@@ -19,7 +23,11 @@ void magic_fini()
     trie_destroy(tr);
 }
 
-bool magic_scan(uint32_t *buf, int len)
+/* bool magic_scan(uint8_t *buf, int len) */
+bool magic_scan(int fd)
 {
-    return trie_scan(tr, buf, len)?true:false;
+    uint8_t magic_buf[16];
+    read(fd, magic_buf, sizeof(magic_buf));
+
+    return trie_scan(tr, magic_buf, 16)?true:false;
 }

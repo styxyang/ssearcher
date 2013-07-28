@@ -7,6 +7,6 @@ void magic_init();
 
 void magic_fini();
 
-bool magic_scan(uint32_t *buf, int len);
+bool magic_scan(int fd);
 
 #endif /* SS_MAGIC_H */
