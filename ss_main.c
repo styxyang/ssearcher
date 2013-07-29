@@ -285,7 +285,7 @@ int ss_check_buffer()
                 int n = read(fdset[0].fd, result, sizeof(result));
                 if (n == 0)
                     return 0;
-                dprintf(WARN, "[%u]%s\n", strlen(result), result);
+                dprintf(WARN, "[%zu]%s\n", strlen(result), result);
                 /* read from readfd, 
                    since you can read from it without being blocked */
             }

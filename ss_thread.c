@@ -39,7 +39,7 @@ void *ss_worker_thread(void *arg)
             continue;
         }
 
-        uint32_t lastpos = 0, nextpos = 0;
+        int32_t lastpos = 0, nextpos = 0;
 
         /* FIXME use opt.search_pattern to replace the pattern */
         while ((lastpos = kmp_match(p + nextpos, map_len(fd) - nextpos, "#include", 8)) >= 0) {

@@ -10,6 +10,10 @@ typedef unsigned long long uint64_t;
 typedef unsigned int uint32_t;
 #endif
 
+#ifndef int32_t
+typedef int int32_t;
+#endif
+
 #ifndef uint8_t
 typedef unsigned char     uint8_t;
 #endif

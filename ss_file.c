@@ -42,12 +42,12 @@ bool unmap_file(void *addr)
 }
 
 /* sanity check: whether the position is within the file boundary */
-inline bool inbound(uint32_t pos)
+bool inbound(uint32_t pos)
 {
     return (pos<tlslen);
 }
 
-inline uint32_t map_len(int fd)
+uint32_t map_len(int fd)
 {
     assert(fd == tlsfd);
     return tlslen;

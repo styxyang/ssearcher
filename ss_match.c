@@ -17,7 +17,7 @@ static void kmp_table_init(int *kmp_table, char *pattern, unsigned int pat_len) 
     }
 }
 
-uint32_t kmp_match(char *text, int text_len, char *pat, int pat_len)
+int32_t kmp_match(char *text, int text_len, char *pat, int pat_len)
 {
     /* int max_match = 0; */
     int pat_pos = 0;        /* index points to locations of pattern */
