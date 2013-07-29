@@ -1,13 +1,16 @@
 #include "ss_config.h"
 #include "ss_thread.h"
 #include "ss_magic.h"
+#include "ss_file.h"
 #include "ss_debug.h"
 
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 
 #include <sys/stat.h>
 #include <dirent.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sched.h>
 
@@ -32,10 +35,12 @@ void *ss_worker_thread(void *arg)
         memset(buf, 0, sizeof(buf));
 
         /* TODO: mmap file for string matching */
-        r = read(fd, buf, sizeof(buf) - 1);
+        char *p = map_file(fd);
+        /* r = read(fd, buf, sizeof(buf) - 1); */
+        memcpy(buf, p, sizeof(buf) - 1);
         dprintf(INFO, "write to result pipe\n");
-        write(ss_result[tid][1], buf, r);
-        /* write(ss_result[tid][1], "\28", 1); */
+        write(ss_result[tid][1], buf, sizeof(buf));
+        unmap_file(p);
         close(fd);
         /* cpu_relax(); */
         sched_yield();

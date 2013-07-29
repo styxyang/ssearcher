@@ -37,4 +37,4 @@ typedef struct th_arg {
 
 #define TEST_PROCON
 
-#endif /* _CONFIG_H_ */
+#endif  /* _CONFIG_H_ */
