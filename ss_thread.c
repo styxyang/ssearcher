@@ -23,13 +23,15 @@ void *ss_worker_thread(void *arg)
     ssize_t n, r;
     int     fd;
     long    tid = (long)arg;
+    struct fileinfo fi;
 
     /* loop to read opened file descriptors from pipe */
-    while ((n = read(pipefd[0], &fd, sizeof(int))) != 0) {
-        if (n != sizeof(int)) {
+    while ((n = read(pipefd[0], &fi, sizeof(struct fileinfo))) != 0) {
+        if (n != sizeof(struct fileinfo)) {
             cpu_relax();
             continue;
         }
+        fd = fi.fd;
 
         char buf[16];
         char *p;
@@ -81,6 +83,7 @@ void *ss_dispatcher_thread(void *arg)
     while ((entry = readdir(d)) != NULL) {
         struct stat st;
         char fullpath[512];
+        dprintf(INFO, "filename: %s", entry->d_name);
         snprintf(fullpath, sizeof(fullpath), "%s/%s", ".", entry->d_name);
         lstat(fullpath, &st);
         if (S_ISREG(st.st_mode)) {
@@ -102,7 +105,14 @@ void *ss_dispatcher_thread(void *arg)
                 close(fd);
                 continue;
             }
-            if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) {
+
+            struct fileinfo fi;
+            fi.fd = fd;
+            memcpy(fi.filename, entry->d_name, strlen(entry->d_name));
+            /* if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) { */
+            /*     perror("write pipefd\n"); */
+            /* } */
+            if (write(pipefd[1], &fi, sizeof(struct fileinfo)) != sizeof(struct fileinfo)) {
                 perror("write pipefd\n");
             }
         }

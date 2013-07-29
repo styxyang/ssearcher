@@ -33,6 +33,10 @@
 #define dprintf(level, fmt, ...)                \
     do {                                        \
     } while (0)
+
+#define die(fmt, ...)                                                   \
+    do {                                                                \
+    } while (0)
 #endif
 
 #endif /* SS_DEBUG_H */

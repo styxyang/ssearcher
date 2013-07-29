@@ -11,7 +11,7 @@ UNAME_S := $(shell uname -s)
 
 # test environment variables
 TEST_HEADERS := -I. -Igtest/include
-TEST_LD_PATH := -Lgtest/build
+TEST_LD_PATH := -Lgtest/build -L/usr/lib
 TEST_LDFLAGS := -lgtest_main -lgtest -pthread
 
 SRCS :=

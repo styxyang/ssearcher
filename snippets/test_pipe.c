@@ -40,7 +40,7 @@ void *readpipe(void *arg)
             printf("%d-%d\n", id, buf);
             /* memset(&buf, 0, sizeof(int)); */
             fstat(buf, &st);
-            printf("st_ino: %lld\n", st.st_ino);
+            printf("st_ino: %ld\n", st.st_ino);
             close(buf);
         } else if (n == 1 && buf == 0) {
             break;

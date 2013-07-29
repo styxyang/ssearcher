@@ -6,4 +6,7 @@
 test_trie: test/test_trie.cpp obj/ss_trie.o
 	$(SS_CXX) $(CFLAGS) $(TEST_HEADERS) $(TEST_LD_PATH) -o $@ $^ $(TEST_LDFLAGS)
 
-TEST_SUITE := test_trie
+test_buf: test/test_buf.cpp obj/ss_buffer.o
+	$(SS_CXX) $(CFLAGS) $(TEST_HEADERS) $(TEST_LD_PATH) -o $@ $^ $(TEST_LDFLAGS)
+
+TEST_SUITE := test_trie test_buf

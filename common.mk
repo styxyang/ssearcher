@@ -8,6 +8,11 @@ ifneq ($(UNAME_S),Darwin)
 LDFLAGS += -pthread
 endif
 
+# libgcc_s is required on Darwin to suppor TLS
+# ifeq ($(UNAME_S),Darwin)
+# LDFLAGS += -lgcc_s
+# endif
+
 
 # Borrowed from redis Makefile
 # to make output colourful ^_^

@@ -6,7 +6,8 @@ SRCS +=	ss_options.c	\
 	ss_thread.c	\
 	ss_trie.c	\
 	ss_magic.c	\
-	ss_file.c
+	ss_file.c	\
+	ss_buffer.c
 
 ss_magic.c: ss_magic.c.tmpl
 	@utils/gen_magic_header.pl
