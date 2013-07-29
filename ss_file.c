@@ -47,7 +47,7 @@ inline bool inbound(uint32_t pos)
     return (pos<tlslen);
 }
 
-inline size_t map_len(int fd)
+inline uint32_t map_len(int fd)
 {
     assert(fd == tlsfd);
     return tlslen;
