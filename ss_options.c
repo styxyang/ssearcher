@@ -9,6 +9,8 @@
 
 #include <fcntl.h>
 
+cli_options opt;
+
 void usage() {
     printf("there is nothing\n");
 }

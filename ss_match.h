@@ -3,10 +3,6 @@
 
 #define SS_MALIGN
 
-#ifndef USE_PTHREAD
-int kmp_match(char *text, int text_len, char *pat, int pat_len);
-#else
-void *kmp_match(void *a);
-#endif
+uint32_t kmp_match(char *text, int text_len, char *pat, int pat_len);
 
 #endif /* SS_MATCH_H */

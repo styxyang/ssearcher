@@ -5,9 +5,9 @@
 #include <sys/stat.h>
 #include <assert.h>
 
-static __thread int    tlsfd;
-static __thread char  *tlsbuf;
-static __thread size_t tlslen;
+static __thread int      tlsfd;
+static __thread char    *tlsbuf;
+static __thread uint32_t tlslen;
 
 void *map_file(int fd)
 {
@@ -18,10 +18,13 @@ void *map_file(int fd)
         die("fail to fstat");
     }
 
-    if ((tlsbuf = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == MAP_FAILED) {
-        die("fail to mmap");
-    }
+    if (st.st_size <= 0)
+        return NULL;
 
+    if ((tlsbuf = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == MAP_FAILED) {
+        perror("mmap");
+        die("fail to mmap: %d", fd);
+    }
     tlsfd = fd;
     tlslen = st.st_size;
     return tlsbuf;
@@ -35,6 +38,17 @@ bool unmap_file(void *addr)
         perror("munmap");
         die("fail to unmap");
     }
-
     return true;
+}
+
+/* sanity check: whether the position is within the file boundary */
+inline bool inbound(uint32_t pos)
+{
+    return (pos<tlslen);
+}
+
+inline size_t map_len(int fd)
+{
+    assert(fd == tlsfd);
+    return tlslen;
 }

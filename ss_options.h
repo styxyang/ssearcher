@@ -12,7 +12,7 @@ typedef struct {
     char *input_dir;
 } cli_options;
 
-cli_options opt;
+extern cli_options opt;
 
 void parse_options(int argc, char *argv[]);
 

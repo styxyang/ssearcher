@@ -310,7 +310,7 @@ int ss_check_buffer()
             perror("poll failed");
             return -1;
         }
-        sched_yield();
+        cpu_relax();
     }
 }
 
@@ -343,6 +343,7 @@ int main(int argc, char *argv[])
     test_file();
     return 0;
 #elif defined(TEST_PROCON)
+    /* parse_options(argc, argv); */
     ss_init();
     test_procon();
     ss_exit();

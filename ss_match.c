@@ -2,10 +2,6 @@
 #include "ss_match.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
-
-extern int finish[2];
-extern pthread_t mainthread;
 
 static void kmp_table_init(int *kmp_table, char *pattern, unsigned int pat_len) {
 
@@ -21,21 +17,9 @@ static void kmp_table_init(int *kmp_table, char *pattern, unsigned int pat_len) 
     }
 }
 
-#ifndef USE_PTHREAD
-int kmp_match(char *text, int text_len, char *pat, int pat_len)
+uint32_t kmp_match(char *text, int text_len, char *pat, int pat_len)
 {
     /* int max_match = 0; */
-#else
-void *kmp_match(void *a)
-{
-    thread_arg *arg = (thread_arg *)a;
-    char *text = arg->pstart;
-    int text_len = arg->text_len;
-    char *pat = arg->pattern;
-    int pat_len = arg->pat_len;
-    /* int max_match = 0; */
-#endif
-
     int pat_pos = 0;        /* index points to locations of pattern */
     int text_pos = 0;       /* index points to locations of text  */
 
@@ -47,6 +31,7 @@ void *kmp_match(void *a)
         exit(-1);
     }
 #else
+    /* FIXME should not always malloc if the pattern remains the same */
     if ((kmp_table = (int *)malloc(sizeof(int) * pat_len)) == NULL) {
         printf("can't to malloc memory");
         exit(-1);
@@ -93,24 +78,10 @@ void *kmp_match(void *a)
         }
     }
     free(kmp_table);
-#ifndef USE_PTHREAD
     return -1;
-#else
-    arg->result = -1;
-    finish[arg->num] = 1;
-    pthread_kill(mainthread, SIGUSR1);
-    return NULL;
-#endif
 found:
     /* would it be unnecessary to freeit?
      * since it will be only executed quickly and then terminated */
     free(kmp_table);
-#ifndef USE_PTHREAD
     return text_pos - pat_len + 1;
-#else
-    arg->result = text_pos - pat_len + 1;
-    finish[arg->num] = 1;
-    pthread_kill(mainthread, SIGUSR1);
-    return NULL;
-#endif
 }

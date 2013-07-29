@@ -2,6 +2,7 @@
 #include "ss_thread.h"
 #include "ss_magic.h"
 #include "ss_file.h"
+#include "ss_match.h"
 #include "ss_debug.h"
 
 #include <stdlib.h>
@@ -26,24 +27,35 @@ void *ss_worker_thread(void *arg)
     /* loop to read opened file descriptors from pipe */
     while ((n = read(pipefd[0], &fd, sizeof(int))) != 0) {
         if (n != sizeof(int)) {
-            /* cpu_relax(); */
-            sched_yield();
+            cpu_relax();
             continue;
         }
 
         char buf[16];
-        memset(buf, 0, sizeof(buf));
+        char *p;
+        if ((p = map_file(fd)) == NULL) {
+            close(fd);
+            cpu_relax();
+            continue;
+        }
 
-        /* TODO: mmap file for string matching */
-        char *p = map_file(fd);
-        /* r = read(fd, buf, sizeof(buf) - 1); */
-        memcpy(buf, p, sizeof(buf) - 1);
-        dprintf(INFO, "write to result pipe\n");
-        write(ss_result[tid][1], buf, sizeof(buf));
+        uint32_t lastpos = 0, nextpos = 0;
+
+        /* FIXME use opt.search_pattern to replace the pattern */
+        while ((lastpos = kmp_match(p + nextpos, map_len(fd) - nextpos, "#include", 8)) >= 0) {
+            if (inbound(lastpos)) {
+                memset(buf, 0, sizeof(buf));
+                memcpy(buf, p + nextpos + lastpos, sizeof(buf) - 1);
+                dprintf(INFO, "write to result pipe\n");
+                write(ss_result[tid][1], buf, sizeof(buf));
+                nextpos += lastpos + 8;
+            } else {
+                break;
+            }
+        }
         unmap_file(p);
         close(fd);
-        /* cpu_relax(); */
-        sched_yield();
+        cpu_relax();
     }
 
     close(ss_result[tid][1]);
@@ -81,7 +93,7 @@ void *ss_dispatcher_thread(void *arg)
                 return 0;
             }
             
-            dprintf(INFO, "open file: %s\n", fullpath);
+            dprintf(INFO, "open file: %d %s\n", fd, fullpath);
 
             /* test whether the file is binary */
             /* and close binary file */
@@ -94,8 +106,7 @@ void *ss_dispatcher_thread(void *arg)
                 perror("write pipefd\n");
             }
         }
-        /* cpu_relax(); */
-        sched_yield();
+        cpu_relax();
     }
 
     close(pipefd[1]);
