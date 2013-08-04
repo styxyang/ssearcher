@@ -2,7 +2,7 @@
 #define SS_POOL_H_
 
 #include "ss_config.h"
-
+#include <pthread.h>
 /* Pause instruction to prevent excess processor bus usage */
 #ifdef USE_PAUSE
 #define cpu_relax()                             \
@@ -18,5 +18,7 @@
 
 void *ss_dispatcher_thread(void *);
 void *ss_worker_thread(void *arg);
+
+extern pthread_mutex_t outmtx;
 
 #endif /* SS_POOL_H_ */

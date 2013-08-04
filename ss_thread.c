@@ -1,9 +1,11 @@
 #include "ss_config.h"
+#include "ss_debug.h"
 #include "ss_thread.h"
 #include "ss_magic.h"
 #include "ss_file.h"
 #include "ss_match.h"
-#include "ss_debug.h"
+#include "ss_options.h"
+#include "ss_buffer.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -14,9 +16,25 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sched.h>
+#include <pthread.h>
 
 extern int pipefd[2];
 extern int ss_result[NCPU][2];
+extern __thread size_t off;
+
+pthread_mutex_t outmtx;
+
+static int32_t begin_of_line(char *p, int32_t mid)
+{
+    while (mid >= 0) {
+        if (p[mid] == '\n')
+            return mid + 1;
+        mid--;
+    }
+    if (mid != 0)
+        return -1;
+    return 0;
+}
 
 void *ss_worker_thread(void *arg)
 {
@@ -43,18 +61,34 @@ void *ss_worker_thread(void *arg)
 
         int32_t lastpos = 0, nextpos = 0;
 
-        /* FIXME use opt.search_pattern to replace the pattern */
-        while ((lastpos = kmp_match(p + nextpos, map_len(fd) - nextpos, "#include", 8)) >= 0) {
+        /* FIXME opt.search_pattern should be guarenteed to be not null */
+        while ((lastpos = kmp_match(p + nextpos, map_len(fd) - nextpos, opt.search_pattern, strlen(opt.search_pattern))) >= 0) {
+        /* while ((lastpos = kmp_match(p + nextpos, map_len(fd) - nextpos, "include", 7)) >= 0) { */
             if (inbound(lastpos)) {
                 memset(buf, 0, sizeof(buf));
-                memcpy(buf, p + nextpos + lastpos, sizeof(buf) - 1);
-                dprintf(INFO, "write to result pipe\n");
-                write(ss_result[tid][1], buf, sizeof(buf));
+                int32_t bol;
+                if ((bol = begin_of_line(p, lastpos + nextpos)) >= 0) {
+                    dprintf(INFO, "write to result buffer");
+                    /* write_buffer(buf, sizeof(buf) - 1); */
+                    /* memcpy(buf, p + bol, sizeof(buf) - 1); */
+                    writeline_buffer(p + bol, 100);
+                    write_buffer("\n", 1);
+                }
+                /* else */
+                /*     memcpy(buf, p + nextpos + lastpos, sizeof(buf) - 1); */
+                    
+                /* dprintf(INFO, "write to result pipe\n"); */
+                /* write(ss_result[tid][1], buf, sizeof(buf)); */
                 nextpos += lastpos + 8;
             } else {
                 break;
             }
         }
+            pthread_mutex_lock(&outmtx);
+            fprintf(stdout, "\n%s\n", read_buffer());
+            fflush(NULL);
+            pthread_mutex_unlock(&outmtx);
+            reset_buffer();
         unmap_file(p);
         close(fd);
         cpu_relax();

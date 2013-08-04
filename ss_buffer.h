@@ -4,7 +4,8 @@
 #include <sys/types.h>
 
 void init_buffer();
-size_t write_buffer(const char *content, size_t clen);
+size_t write_buffer(const char *content, size_t len);
+size_t writeline_buffer(const char *content, size_t len);
 char *read_buffer();
 void reset_buffer();
 void destroy_buffer();
