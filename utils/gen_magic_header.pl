@@ -1,4 +1,4 @@
-#!/usr/bin/env perl -w
+#!/usr/bin/env perl
 
 # This script is used to transform magic definition list
 # in `src/magic_list' into source file `src/magic.c'
