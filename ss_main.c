@@ -163,7 +163,8 @@ int test_kmp(int argc, char *argv[])
     printf("%s", str);
     char *pattern = "ab";
 
-    int pos = kmp_match(p, strlen(p), pattern, 2);
+    int linum;
+    int pos = kmp_match(p, strlen(p), pattern, 2, &linum);
     printf("%d\n", pos);
     snprintf(str, 10, "%s\n", p+pos+1);
     printf("%s", str);
@@ -209,7 +210,8 @@ void test_file()
 
     printf("%d %d\n", text_len, pat_len);
     /* start searching using KMP algorithm */
-    int pos = kmp_match(p, text_len, pattern, pat_len);
+    int linum;
+    int pos = kmp_match(p, text_len, pattern, pat_len, &linum);
 
     printf("%d\n", pos);
     if (pos > 0) {

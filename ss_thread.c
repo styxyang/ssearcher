@@ -67,40 +67,41 @@ void *ss_worker_thread(void *arg)
             continue;
         }
 
-        int32_t lastpos = 0, nextpos = 0;
+        int32_t lastpos = 0, nextpos = 0, linum = 0;
+        char ival[24];
 
         /* FIXME opt.search_pattern should be guarenteed to be not null */
         while (1) {
             lastpos = kmp_match(p + nextpos,
                                 map_len(fd) - nextpos,
                                 opt.search_pattern,
-                                strlen(opt.search_pattern));
-            if (lastpos < 0)
+                                strlen(opt.search_pattern),
+                                &linum);
+            if (lastpos < 0 || !inbound(lastpos))
                 break;
 
-            if (inbound(lastpos)) {
-                memset(buf, 0, sizeof(buf));
-                int32_t bol;
-                if ((bol = begin_of_line(p, lastpos + nextpos)) >= 0) {
-                    dprintf(INFO, "write to result buffer");
-                    /* write_buffer(buf, sizeof(buf) - 1); */
-                    /* memcpy(buf, p + bol, sizeof(buf) - 1); */
-                    writeline_buffer(p + bol, 100);
-                    write_buffer("\n", 1);
-                }
-                /* else */
-                /*     memcpy(buf, p + nextpos + lastpos, sizeof(buf) - 1); */
+            memset(buf, 0, sizeof(buf));
+            int32_t bol;
+            if ((bol = begin_of_line(p, lastpos + nextpos)) >= 0) {
+                dprintf(INFO, "write to result buffer");
 
-                /* dprintf(INFO, "write to result pipe\n"); */
-                /* write(ss_result[tid][1], buf, sizeof(buf)); */
-                nextpos += lastpos + 8;
-            } else {
-                break;
+                /* FIXME abstract as `write_filename' maybe */
+                memset(ival, 0, sizeof(ival));
+                sprintf(ival, LINUM_COLOR "%d:" "\e[0m", linum);
+                write_buffer(ival, strlen(ival));
+
+                writeline_color_buffer(p + bol, 100, lastpos + nextpos - bol, strlen(opt.search_pattern));
+                write_buffer("\n", 1);
             }
+            /* There should be no exceptions */
+
+            /* dprintf(INFO, "write to result pipe\n"); */
+            /* write(ss_result[tid][1], buf, sizeof(buf)); */
+            nextpos += lastpos + strlen(opt.search_pattern);
         }
 
         if (off) {
-            fprintf(stdout, FNAME_COLOR "%d: %s" "\e[0m", tid, fi.filename);
+            fprintf(stdout, FNAME_COLOR "%s" "\e[0m", fi.filename);
             fprintf(stdout, "\n%s\n", read_buffer());
             fflush(NULL);
         }

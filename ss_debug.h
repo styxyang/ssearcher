@@ -16,6 +16,7 @@
 #define INFO_COLOR   "\e[1;34m"
 #define FNAME_COLOR  "\e[1;34m"
 #define LINUM_COLOR  "\e[1;35m"
+#define HILI_COLOR   "\e[43m\e[30m"
 
 #ifdef DEBUG
 #define dprintf(level, fmt, ...)                                        \

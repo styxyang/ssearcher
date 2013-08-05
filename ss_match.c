@@ -17,11 +17,15 @@ static void kmp_table_init(int *kmp_table, char *pattern, unsigned int pat_len) 
     }
 }
 
-int32_t kmp_match(char *text, int text_len, char *pat, int pat_len)
+/* use KMP algorithm to do string matching
+ * `linum' is the current line number and will increase
+ * with the process of matching */
+int32_t kmp_match(char *text, int text_len, char *pat, int pat_len, int *linum)
 {
     /* int max_match = 0; */
     int pat_pos = 0;        /* index points to locations of pattern */
     int text_pos = 0;       /* index points to locations of text  */
+    int line_cnt = *linum;
 
     /* array holding the prefix vector */
     int *kmp_table = NULL;
@@ -46,6 +50,8 @@ int32_t kmp_match(char *text, int text_len, char *pat, int pat_len)
     kmp_table_init(kmp_table, pat, pat_len);
 
     while (text_pos < text_len) {
+        if (text[text_pos] == '\n')
+            line_cnt++;
 
         if (text[text_pos] == pat[pat_pos]) {
             if (pat_pos == pat_len - 1)
@@ -78,10 +84,12 @@ int32_t kmp_match(char *text, int text_len, char *pat, int pat_len)
         }
     }
     free(kmp_table);
+    *linum = line_cnt;
     return -1;
 found:
     /* would it be unnecessary to freeit?
      * since it will be only executed quickly and then terminated */
     free(kmp_table);
+    *linum = line_cnt;
     return text_pos - pat_len + 1;
 }
