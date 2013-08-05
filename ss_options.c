@@ -10,13 +10,22 @@
 #include <fcntl.h>
 
 cli_options opt;
+static const char *program_name;
 
-void usage() {
-    printf("there is nothing\n");
+static void print_usage()
+{
+    fprintf(stdout,
+            "Usage: %s [OPTION] pattern\n", program_name);
+    fprintf(stdout,
+            "  -h  --help             Display this usage information.\n"
+            "  -o  --output filename  Write output to file.\n"
+            "  -v  --verbose          Print verbose messages.\n");
+    exit(1);
 }
 
 void parse_options(int argc, char *argv[]) {
     int ch, opt_idx;
+    program_name = argv[0];
 
     struct option longopts[] = {
         { "kmp",  no_argument,       &opt.str_matching_algo, 0 },
@@ -30,7 +39,7 @@ void parse_options(int argc, char *argv[]) {
     while ((ch = getopt_long(argc, argv, "", longopts, &opt_idx)) != -1) {
         switch (ch) {
             case '?':
-                usage();
+                print_usage();
             case 0:
                 dprintf(INFO, "%d, %d\n", optopt, optind);
                 if (strcmp(longopts[opt_idx].name, "file") == 0) {
@@ -42,7 +51,7 @@ void parse_options(int argc, char *argv[]) {
                 }
                 break;
             default:
-                usage();
+                print_usage();
         }
     }
 
@@ -53,7 +62,7 @@ void parse_options(int argc, char *argv[]) {
 
     if (optind >= argc) {
         dprintf(ERROR, "parse_options: missing pattern string");
-        exit(-1);
+        print_usage();
     }
     opt.search_pattern = argv[optind];
     printf("search for \"%s\"-%d\n", opt.search_pattern, strlen(opt.search_pattern));
@@ -61,6 +70,8 @@ void parse_options(int argc, char *argv[]) {
     if (!opt.input_file && !opt.input_dir) {
         dprintf(ERROR, "parse_options: missing search scope");
         printf("default in current directory\n");
-        /* exit(-1); */
+        if (!opt.search_pattern) {
+            print_usage();
+        }
     }
 }
