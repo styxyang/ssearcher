@@ -150,29 +150,6 @@ void myftw(const char *dirname, int (*fn)(char *, int, char *, int))
     }
 }
 
-int test_kmp(int argc, char *argv[])
-{
-    if (argc < 2)
-        return 1;
-
-    int fd = open(argv[1], O_RDONLY);
-    char *p = mmap(0, 4096, PROT_READ, MAP_SHARED, fd, 0);
-    /* printf("%d\n", p); */
-    char str[16];
-    snprintf(str, 10, "%s\n", p);
-    printf("%s", str);
-    char *pattern = "ab";
-
-    int linum;
-    int pos = kmp_match(p, strlen(p), pattern, 2, &linum);
-    printf("%d\n", pos);
-    snprintf(str, 10, "%s\n", p+pos+1);
-    printf("%s", str);
-    munmap(p, strlen(p));
-    close(fd);
-    return 0;
-}
-
 void test_file()
 {
     /* default to search in the current directory */

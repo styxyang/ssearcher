@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void kmp_table_init(int *kmp_table, char *pattern, unsigned int pat_len) {
+static void kmp_table_init(int *kmp_table, const char *pattern, unsigned int pat_len) {
 
     kmp_table[0] = 0;
     int i;
@@ -20,7 +20,7 @@ static void kmp_table_init(int *kmp_table, char *pattern, unsigned int pat_len) 
 /* use KMP algorithm to do string matching
  * `linum' is the current line number and will increase
  * with the process of matching */
-int32_t kmp_match(char *text, int text_len, char *pat, int pat_len, int *linum)
+int32_t kmp_match(const char *text, int text_len, const char *pat, int pat_len, int *linum)
 {
     /* int max_match = 0; */
     int pat_pos = 0;        /* index points to locations of pattern */
