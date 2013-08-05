@@ -60,6 +60,7 @@ void parse_options(int argc, char *argv[]) {
 
     if (!opt.input_file && !opt.input_dir) {
         dprintf(ERROR, "parse_options: missing search scope");
-        exit(-1);
+        printf("default in current directory\n");
+        /* exit(-1); */
     }
 }

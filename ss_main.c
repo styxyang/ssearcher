@@ -319,10 +319,12 @@ void test_procon()
     pthread_mutex_init(&outmtx, NULL);
     pthread_create(&pid[0], NULL, ss_dispatcher_thread, NULL);
     pthread_create(&pid[1], NULL, ss_worker_thread, (void *)0);
+    pthread_create(&pid[2], NULL, ss_worker_thread, (void *)1);
     /* pthread_create(&pid[2], NULL, ss_worker_thread, NULL); */
-    ss_check_buffer();
+    /* ss_check_buffer(); */
     pthread_join(pid[0], NULL);
     pthread_join(pid[1], NULL);
+    pthread_join(pid[2], NULL);
     pthread_mutex_destroy(&outmtx);
 }
 

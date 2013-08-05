@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEBUG
+/* #define DEBUG */
 
 #define ERROR   0
 #define WARN    1
@@ -14,6 +14,8 @@
 #define ERROR_COLOR  "\e[1;31m"
 #define WARN_COLOR   "\e[1;33m"
 #define INFO_COLOR   "\e[1;34m"
+#define FNAME_COLOR  "\e[1;34m"
+#define LINUM_COLOR  "\e[1;35m"
 
 #ifdef DEBUG
 #define dprintf(level, fmt, ...)                                        \

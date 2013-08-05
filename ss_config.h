@@ -27,8 +27,8 @@ typedef unsigned char     bool;
 #  endif
 #endif
 
-#define NCPU 1
-#define NTHR 2
+#define NCPU 2
+#define NTHR 3
 
 typedef struct th_arg {
     char *pstart;

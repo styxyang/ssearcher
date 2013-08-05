@@ -43,8 +43,16 @@ void *ss_worker_thread(void *arg)
     long    tid = (long)arg;
     struct fileinfo fi;
 
+    init_buffer();
+
     /* loop to read opened file descriptors from pipe */
-    while ((n = read(pipefd[0], &fi, sizeof(struct fileinfo))) != 0) {
+    /* while ((n = read(pipefd[0], &fi, sizeof(struct fileinfo))) != 0) { */
+    while (1) {
+        pthread_mutex_lock(&outmtx);
+        n = read(pipefd[0], &fi, sizeof(struct fileinfo));
+        pthread_mutex_unlock(&outmtx);
+        if (n == 0)
+            break;
         if (n != sizeof(struct fileinfo)) {
             cpu_relax();
             continue;
@@ -62,8 +70,14 @@ void *ss_worker_thread(void *arg)
         int32_t lastpos = 0, nextpos = 0;
 
         /* FIXME opt.search_pattern should be guarenteed to be not null */
-        while ((lastpos = kmp_match(p + nextpos, map_len(fd) - nextpos, opt.search_pattern, strlen(opt.search_pattern))) >= 0) {
-        /* while ((lastpos = kmp_match(p + nextpos, map_len(fd) - nextpos, "include", 7)) >= 0) { */
+        while (1) {
+            lastpos = kmp_match(p + nextpos,
+                                map_len(fd) - nextpos,
+                                opt.search_pattern,
+                                strlen(opt.search_pattern));
+            if (lastpos < 0)
+                break;
+
             if (inbound(lastpos)) {
                 memset(buf, 0, sizeof(buf));
                 int32_t bol;
@@ -76,7 +90,7 @@ void *ss_worker_thread(void *arg)
                 }
                 /* else */
                 /*     memcpy(buf, p + nextpos + lastpos, sizeof(buf) - 1); */
-                    
+
                 /* dprintf(INFO, "write to result pipe\n"); */
                 /* write(ss_result[tid][1], buf, sizeof(buf)); */
                 nextpos += lastpos + 8;
@@ -84,15 +98,20 @@ void *ss_worker_thread(void *arg)
                 break;
             }
         }
-            pthread_mutex_lock(&outmtx);
+
+        if (off) {
+            fprintf(stdout, FNAME_COLOR "%d: %s" "\e[0m", tid, fi.filename);
             fprintf(stdout, "\n%s\n", read_buffer());
             fflush(NULL);
-            pthread_mutex_unlock(&outmtx);
-            reset_buffer();
+        }
+
+        reset_buffer();
         unmap_file(p);
         close(fd);
         cpu_relax();
     }
+
+    destroy_buffer();
 
     close(ss_result[tid][1]);
     dprintf(INFO, "ss_result[%ld][1] closed", tid);
@@ -141,6 +160,7 @@ void *ss_dispatcher_thread(void *arg)
             }
 
             struct fileinfo fi;
+            memset(&fi, 0, sizeof(struct fileinfo));
             fi.fd = fd;
             memcpy(fi.filename, entry->d_name, strlen(entry->d_name));
             /* if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) { */
