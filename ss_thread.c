@@ -41,7 +41,8 @@ void *ss_worker_thread(void *arg)
     ssize_t n, r;
     int     fd;
     long    tid = (long)arg;
-    struct fileinfo fi;
+    fileinfo fi;
+    size_t  patlen = strlen(opt.search_pattern);
 
     init_buffer();
 
@@ -49,55 +50,59 @@ void *ss_worker_thread(void *arg)
     /* while ((n = read(pipefd[0], &fi, sizeof(struct fileinfo))) != 0) { */
     while (1) {
         pthread_mutex_lock(&outmtx);
-        n = read(pipefd[0], &fi, sizeof(struct fileinfo));
+        n = read(pipefd[0], &fi, sizeof(fileinfo));
         pthread_mutex_unlock(&outmtx);
+
         if (n == 0)
             break;
-        if (n != sizeof(struct fileinfo)) {
+
+        if (n != sizeof(fileinfo)) {
             cpu_relax();
             continue;
         }
-        fd = fi.fd;
 
         char buf[16];
         char *p;
-        if ((p = map_file(fd)) == NULL) {
-            close(fd);
+        if ((p = map_file(&fi)) == NULL) {
+            close(fi.fd);
             cpu_relax();
             continue;
         }
 
-        int32_t lastpos = 0, nextpos = 0, linum = 0;
+        int32_t lastpos = 0, startpos = 0;
+        uint32_t linum = 0;
         char ival[24];
 
         /* FIXME opt.search_pattern should be guarenteed to be not null */
         while (1) {
-            lastpos = kmp_match(p + nextpos,
-                                map_len(fd) - nextpos,
+            lastpos = kmp_match(p + startpos,
+                                fi.size - startpos,
                                 opt.search_pattern,
-                                strlen(opt.search_pattern),
+                                patlen,
                                 &linum);
-            if (lastpos < 0 || !inbound(lastpos))
+            /* if (lastpos < 0 || !inbound(lastpos)) */
+            if (lastpos < 0)
                 break;
 
             memset(buf, 0, sizeof(buf));
             int32_t bol;
-            if ((bol = begin_of_line(p, lastpos + nextpos)) >= 0) {
+            if ((bol = begin_of_line(p, lastpos + startpos)) >= 0) {
                 dprintf(INFO, "write to result buffer");
 
                 /* FIXME abstract as `write_filename' maybe */
                 memset(ival, 0, sizeof(ival));
-                sprintf(ival, LINUM_COLOR "%d:" "\e[0m", linum);
-                write_buffer(ival, strlen(ival));
+                sprintf(ival, LINUM_COLOR "%u:" "\e[0m", linum);
+                writef_buffer(LINUM_COLOR "%u:" "\e[0m", linum);
+                /* write_buffer(ival, strlen(ival)); */
 
-                writeline_color_buffer(p + bol, 100, lastpos + nextpos - bol, strlen(opt.search_pattern));
+                writeline_color_buffer(p + bol, 100, lastpos + startpos - bol, patlen);
                 write_buffer("\n", 1);
             }
             /* There should be no exceptions */
 
             /* dprintf(INFO, "write to result pipe\n"); */
             /* write(ss_result[tid][1], buf, sizeof(buf)); */
-            nextpos += lastpos + strlen(opt.search_pattern);
+            startpos += lastpos + patlen;
         }
 
         if (off) {
@@ -107,8 +112,7 @@ void *ss_worker_thread(void *arg)
         }
 
         reset_buffer();
-        unmap_file(p);
-        close(fd);
+        unmap_file(&fi);
         cpu_relax();
     }
 
@@ -160,14 +164,14 @@ void *ss_dispatcher_thread(void *arg)
                 continue;
             }
 
-            struct fileinfo fi;
-            memset(&fi, 0, sizeof(struct fileinfo));
+            fileinfo fi;
+            memset(&fi, 0, sizeof(fileinfo));
             fi.fd = fd;
             memcpy(fi.filename, entry->d_name, strlen(entry->d_name));
             /* if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) { */
             /*     perror("write pipefd\n"); */
             /* } */
-            if (write(pipefd[1], &fi, sizeof(struct fileinfo)) != sizeof(struct fileinfo)) {
+            if (write(pipefd[1], &fi, sizeof(fileinfo)) != sizeof(fileinfo)) {
                 perror("write pipefd\n");
             }
         }

@@ -3,6 +3,7 @@
 #include "ss_buffer.h"
 
 #include <string.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 
@@ -44,6 +45,7 @@ size_t write_buffer(const char *content, size_t len)
     }
     memcpy(buffer + off, content, len);
     off += len;
+    return len;
 }
 
 char *read_buffer()
@@ -65,6 +67,23 @@ void reset_buffer()
     init_buffer();
 }
 
+size_t writef_buffer(const char *format, ...)
+{
+    /* may grow several times util enough */
+    va_list args;
+    char    str[512];
+    int     n;
+    memset(str, 0, sizeof(str));
+
+    va_start(args, format);
+
+    /* the correct usage of va is to use `va_arg' and specify the type */
+    n = sprintf(str, format, va_arg(args, uint32_t));
+    write_buffer(str, n);
+    va_end(args);
+    return n;
+}
+
 size_t writeline_buffer(const char *content, size_t len)
 {
     if (off + len > cap) {
@@ -75,6 +94,7 @@ size_t writeline_buffer(const char *content, size_t len)
         ;
     memcpy(buffer + off, content, i);
     off += i;
+    return i;
 }
 
 /* write to buffer a line with specified characters hightlighted
@@ -102,5 +122,6 @@ size_t writeline_color_buffer(const char *content, size_t len, size_t off1, size
         ;
     memcpy(buffer + off, content + off1 + colorlen, i);
     off += i;
+    return len + strlen(HILI_COLOR) + 4;
 }
 

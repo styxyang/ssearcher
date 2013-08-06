@@ -1,54 +1,52 @@
 #include "ss_file.h"
 #include "ss_debug.h"
 
+#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <assert.h>
 
-static __thread int      tlsfd;
-static __thread char    *tlsbuf;
-static __thread uint32_t tlslen;
-
-void *map_file(int fd)
+void *map_file(fileinfo *fi)
 {
-    assert(fd);
+    assert(fi->fd);
 
     struct stat st;
-    if (fstat(fd, &st) < 0) {
+    if (fstat(fi->fd, &st) < 0) {
+        close(fi->fd);
         die("fail to fstat");
     }
 
+    /* make sure size is always positive and file is not empty */
     if (st.st_size <= 0)
         return NULL;
 
-    if ((tlsbuf = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == MAP_FAILED) {
+    if ((fi->pmap = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fi->fd, 0)) == MAP_FAILED) {
         perror("mmap");
-        die("fail to mmap: %d", fd);
+        close(fi->fd);
+        die("fail to mmap: %d", fi->fd);
     }
-    tlsfd = fd;
-    tlslen = st.st_size;
-    return tlsbuf;
+    fi->size = st.st_size;
+    return fi->pmap;
 }
 
-bool unmap_file(void *addr)
+bool unmap_file(fileinfo *fi)
 {
-    assert(addr == tlsbuf);
+    assert(fi->pmap);
 
-    if (munmap(addr, tlslen) < 0) {
+    if (fi->pmap &&
+        fi->size &&
+        munmap(fi->pmap, fi->size) < 0) {
         perror("munmap");
         die("fail to unmap");
     }
+    fi->pmap = 0;
+    fi->size = 0;
+    close(fi->fd);
     return true;
 }
 
 /* sanity check: whether the position is within the file boundary */
 bool inbound(uint32_t pos)
 {
-    return (pos<tlslen);
-}
-
-uint32_t map_len(int fd)
-{
-    assert(fd == tlsfd);
-    return tlslen;
+    return true;
 }

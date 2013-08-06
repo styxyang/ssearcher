@@ -48,7 +48,7 @@ TEST_F(MatchTest, KMPCheck)
 {
     const char *pattern = "stat";
 
-    int linum;
+    uint32_t linum;
     int pstart = 0;
     int pos = kmp_match(p + pstart, strlen(p), pattern, 4, &linum);
     EXPECT_EQ(strncmp(pattern, p + pos + pstart, 4), 0);

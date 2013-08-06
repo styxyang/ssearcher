@@ -65,7 +65,7 @@ void parse_options(int argc, char *argv[]) {
         print_usage();
     }
     opt.search_pattern = argv[optind];
-    printf("search for \"%s\"-%d\n", opt.search_pattern, strlen(opt.search_pattern));
+    printf("search for \"%s\"-%zd\n", opt.search_pattern, strlen(opt.search_pattern));
 
     if (!opt.input_file && !opt.input_dir) {
         dprintf(ERROR, "parse_options: missing search scope");

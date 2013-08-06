@@ -5,14 +5,15 @@
 
 #define MAXPATH 255
 
-struct fileinfo {
-    int fd;
-    char filename[MAXPATH];
-};
+typedef struct {
+    int    fd;
+    char   filename[MAXPATH];  /* may resort to `readlink' */
+    char  *pmap;
+    size_t size;
+} fileinfo;
 
-void *map_file(int fd);
-bool unmap_file(void *addr);
+void *map_file(fileinfo *fi);
+bool unmap_file(fileinfo *fi);
 bool inbound(uint32_t pos);
-uint32_t map_len(int fd);
 
 #endif  /* SS_FILE_H */

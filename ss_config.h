@@ -1,6 +1,8 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include <sys/types.h>
+
 /* #define USE_PTHREAD */
 #ifndef uint64_t
 typedef unsigned long long uint64_t;
@@ -38,7 +40,5 @@ typedef struct th_arg {
     int   num;
     int   result;
 } thread_arg;
-
-#define TEST_PROCON
 
 #endif  /* _CONFIG_H_ */
