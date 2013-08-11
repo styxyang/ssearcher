@@ -98,30 +98,43 @@ size_t writeline_buffer(const char *content, size_t len)
 }
 
 /* write to buffer a line with specified characters hightlighted
- * from `off1' with `length' and total length within `len' */
-size_t writeline_color_buffer(const char *content, size_t len, size_t off1, size_t colorlen)
+ * from `off1' with `length' and total length within `len'
+ *
+ * \param content  string that is going to be appended to buffer
+ * \param len      max length to copy
+ * \param off1     offset of the patched string in content string
+ * \param colorlen length of highlight */
+size_t writeline_color_buffer(const char *content, size_t len,
+                              size_t off1, size_t colorlen)
 {
     if (off + len > cap) {
         buffer_grow(len);
     }
 
-    memcpy(buffer + off, content, off1);
-    off += off1;
+    char *bufferend = buffer + off;
+    char *hilitoken = bufferend + off1;
 
-    memcpy(buffer + off, HILI_COLOR, strlen(HILI_COLOR));
-    off += strlen(HILI_COLOR);
+    /* `sizeof' a string includes the null terminator */
+    char *patstart  = hilitoken + sizeof(HILI_COLOR) - 1;
+    char *hiliend   = patstart + colorlen;
+    char *reststr   = hiliend + 4;  /* "\e[0m" */
+    const char *restctnt  = content + off1 + colorlen;
 
-    memcpy(buffer + off, content + off1, colorlen);
-    off += colorlen;
+    memcpy(bufferend, content, off1);
 
-    memcpy(buffer + off, "\e[0m", 4);
-    off += 4;
+    memcpy(hilitoken, HILI_COLOR, sizeof(HILI_COLOR) - 1);
+
+    memcpy(patstart, content + off1, colorlen);
+
+    memcpy(hiliend, "\e[0m", 4);
 
     int i;
-    for (i = 0; i < len && content[i + off1  + colorlen] != '\n'; i++)
+    for (i = 0; i < len - off1 - colorlen && restctnt[i] != '\n' && restctnt[i] != '\0'; i++)
         ;
-    memcpy(buffer + off, content + off1 + colorlen, i);
-    off += i;
-    return len + strlen(HILI_COLOR) + 4;
+    memcpy(reststr, restctnt, i);
+    off += (uint32_t)(reststr - bufferend) + i;
+
+    return reststr - bufferend + i;
 }
+
 

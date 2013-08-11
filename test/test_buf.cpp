@@ -75,3 +75,16 @@ TEST_F(BufferTest, ContentCheck)
     EXPECT_EQ(strncmp(read_buffer(), helloworld, 10), 0);
     EXPECT_EQ(off, 10);
 }
+
+TEST_F(BufferTest, WritelnTest)
+{
+    EXPECT_EQ(off, 0);
+    const char line[] = "The quick brown fox jumps over the lazy dog";
+    const char result[] = "The quick brown \e[48;5;220m\e[30;22mfox\e[0m jumps over the lazy dog";
+    size_t nbytes = writeline_color_buffer(line, sizeof(result), 16, 3);
+    EXPECT_EQ(cap, DEFAULT_SIZE);
+    EXPECT_EQ(strncmp(read_buffer(), result, sizeof(result) - 1), 0);
+    EXPECT_EQ(nbytes, sizeof(result) - 1);
+    EXPECT_EQ(off, sizeof(result) - 1);
+    printf("%s\n", read_buffer());
+}
