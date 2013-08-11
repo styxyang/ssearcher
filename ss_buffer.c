@@ -137,4 +137,30 @@ size_t writeline_color_buffer(const char *content, size_t len,
     return reststr - bufferend + i;
 }
 
+size_t amendline_color_buffer(size_t lastlen, size_t off1, size_t colorlen, int cnt)
+{
+    if (off + sizeof(HILI_COLOR) + 3 > cap) {
+        buffer_grow(sizeof(HILI_COLOR) + 3);
+    }
 
+    char *amendstart = buffer + off - lastlen
+            + off1 + cnt * (sizeof(HILI_COLOR) + 3);
+    char *amendend   = amendstart + colorlen;
+    char *restline   = amendend + sizeof(HILI_COLOR) + 3;
+    printf("amendstart: %.8s\n", amendstart);
+    printf("amendend: %.8s\n", amendend);
+
+    /* copy rest of the line excluding the pattern part */
+    strcpy(restline, amendend);
+    /* move the pattern to make space for HILI_COLOR */
+    memcpy(amendstart + sizeof(HILI_COLOR) - 1, amendstart, colorlen);
+    /* fill in the HILI_COLOR */
+    memcpy(amendstart,
+           HILI_COLOR, sizeof(HILI_COLOR) - 1);
+    /* fill in the reset part */
+    memcpy(amendstart + sizeof(HILI_COLOR) - 1 + colorlen
+           , "\e[0m", 4);
+    off += sizeof(HILI_COLOR) + 3;
+
+    return sizeof(HILI_COLOR) + 3;
+}

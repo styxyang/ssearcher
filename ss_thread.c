@@ -92,16 +92,15 @@ void *ss_worker_thread(void *arg)
 
                 static int cnt;
                 if (linum != lastline) {
-                    writef_buffer(LINUM_COLOR "%u:" "\e[0m", linum);
+                    writef_buffer(LINUM_COLOR "\n%u:" "\e[0m", linum);
                     nbuf = writeline_color_buffer(p + bol, 1024, matchpos + startpos - bol, patlen);
-                    /* lastline = linum; */
-                    /* cnt = 1; */
-                /* } else { */
-                /*     dprintf(WARN, "another match in the same line"); */
-                /*     amendline_color_buffer(nbuf, matchpos + startpos - bol, patlen, cnt); */
-                /*     cnt++; */
+                    lastline = linum;
+                    cnt = 1;
+                } else {
+                    dprintf(WARN, "another match in the same line");
+                    amendline_color_buffer(nbuf, matchpos + startpos - bol, patlen, cnt);
+                    cnt++;
                 }
-                write_buffer("\n", 1);
             }
             /* There should be no exceptions */
 
@@ -112,8 +111,8 @@ void *ss_worker_thread(void *arg)
 
         if (off) {
             /* FIXME abstract as `write_filename' maybe */
-            fprintf(stdout, FNAME_COLOR "%s" "\e[0m", fi.filename);
-            fprintf(stdout, "\n%s\n", read_buffer());
+            fprintf(stdout, FNAME_COLOR "\n%s" "\e[0m", fi.filename);
+            fprintf(stdout, "%s\n", read_buffer());
             fflush(NULL);
         }
 
