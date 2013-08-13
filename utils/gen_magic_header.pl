@@ -17,7 +17,7 @@ open MAGIC_SRC,  ">", $magic_src;
 
 # resolve definitions
 while (<MAGIC_DEFS>) {
-  /^(\S+)\s+(\S+)$/;
+  /^[^\/](\S+)\s+(\S+)$/;
   $magic_map{$1} = $2;
 }
 close MAGIC_DEFS;
