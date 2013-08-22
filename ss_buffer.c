@@ -147,8 +147,6 @@ size_t amendline_color_buffer(size_t lastlen, size_t off1, size_t colorlen, int 
             + off1 + cnt * (sizeof(HILI_COLOR) + 3);
     char *amendend   = amendstart + colorlen;
     char *restline   = amendend + sizeof(HILI_COLOR) + 3;
-    printf("amendstart: %.8s\n", amendstart);
-    printf("amendend: %.8s\n", amendend);
 
     /* copy rest of the line excluding the pattern part */
     strcpy(restline, amendend);
