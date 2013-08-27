@@ -79,10 +79,10 @@ void *ss_worker_thread(void *arg)
         /* FIXME opt.search_pattern should be guarenteed to be not null */
         while (1) {
             matchpos = kmp_match(p + startpos,
-                                fi.size - startpos,
-                                opt.search_pattern,
-                                patlen,
-                                &linum);
+                                 fi.size - startpos,
+                                 opt.search_pattern,
+                                 patlen,
+                                 &linum);
             /* if (matchpos < 0 || !inbound(matchpos)) */
             if (matchpos < 0)
                 break;
@@ -127,6 +127,7 @@ void *ss_worker_thread(void *arg)
     }
 
     destroy_buffer();
+    /* kmp_finish(); */
 
     close(ss_result[tid][1]);
     dprintf(INFO, "ss_result[%ld][1] closed", tid);
@@ -204,6 +205,11 @@ void *ss_dispatcher_thread(void *arg)
         }
 
         if (strcmp(fts_entry->fts_name, ".svn") == 0) {
+            fts_set(pfts, fts_entry, FTS_SKIP);
+            goto next_entry;
+        }
+
+        if (strcmp(fts_entry->fts_name, ".hg") == 0) {
             fts_set(pfts, fts_entry, FTS_SKIP);
             goto next_entry;
         }

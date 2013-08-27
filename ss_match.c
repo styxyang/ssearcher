@@ -3,7 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void kmp_table_init(int *kmp_table, const char *pattern, unsigned int pat_len) {
+static __thread bool ready = false;
+static __thread int *kmp_table = NULL;
+
+
+static void kmp_prepare(const char *pattern, unsigned int pat_len) {
 
     kmp_table[0] = 0;
     int i;
@@ -28,26 +32,30 @@ int32_t kmp_match(const char *text, int text_len, const char *pat, int pat_len, 
     int line_cnt = *linum;
 
     /* array holding the prefix vector */
-    int *kmp_table = NULL;
+
+    if (!ready) {
+        printf("-------------not ready");
 #ifdef SS_MALIGN
-    if (posix_memalign((void **)&kmp_table, 0x1000, sizeof(int) * pat_len) != 0) {
-        printf("can't memalign memory");
-        exit(-1);
-    }
+        if (kmp_table == NULL && posix_memalign((void **)&kmp_table, 0x1000, sizeof(int) * pat_len) != 0) {
+            printf("can't memalign memory");
+            exit(-1);
+        }
 #else
-    /* FIXME should not always malloc if the pattern remains the same */
-    if ((kmp_table = (int *)malloc(sizeof(int) * pat_len)) == NULL) {
-        printf("can't to malloc memory");
-        exit(-1);
-    }
+        /* FIXME should not always malloc if the pattern remains the same */
+        if (kmp_table == NULL && (kmp_table = (int *)malloc(sizeof(int) * pat_len)) == NULL) {
+            printf("can't to malloc memory");
+            exit(-1);
+        }
 #endif
 #ifdef SS_MADV
-    if (madvise(kmp_table, sizeof(int) * pat_len,
-                MADV_WILLNEED | MADV_ZERO_WIRED_PAGES) < 0) {
-        perror("fail to madvise");
-    }
+        if (madvise(kmp_table, sizeof(int) * pat_len,
+                    MADV_WILLNEED | MADV_ZERO_WIRED_PAGES) < 0) {
+            perror("fail to madvise");
+        }
 #endif
-    kmp_table_init(kmp_table, pat, pat_len);
+        kmp_prepare(pat, pat_len);
+        ready = true;
+    }
 
     while (text_pos < text_len) {
         if (text[text_pos] == '\n')
@@ -83,13 +91,19 @@ int32_t kmp_match(const char *text, int text_len, const char *pat, int pat_len, 
             }
         }
     }
-    free(kmp_table);
     *linum = line_cnt;
     return -1;
 found:
     /* would it be unnecessary to freeit?
      * since it will be only executed quickly and then terminated */
-    free(kmp_table);
     *linum = line_cnt;
     return text_pos - pat_len + 1;
+}
+
+void kmp_finish()
+{
+    if (kmp_table) {
+        free(kmp_table);
+        kmp_table = NULL;
+    }
 }
