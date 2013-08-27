@@ -29,9 +29,13 @@ static inline void buffer_grow(size_t len)
 
 void init_buffer()
 {
-    if (buffer)
-        free(buffer);
-    buffer = malloc(DEFAULT_SIZE * sizeof(char));
+    if (buffer != NULL) {
+        dprintf(WARN, "before realloc buffer: %p", buffer);
+        buffer = realloc(buffer, DEFAULT_SIZE * sizeof(char));
+        dprintf(WARN, "after realloc buffer: %p", buffer);
+    } else {
+        buffer = malloc(DEFAULT_SIZE * sizeof(char));
+    }
     memset(buffer, 0, DEFAULT_SIZE);
     cap = DEFAULT_SIZE;
     off = 0;
@@ -64,6 +68,7 @@ void destroy_buffer()
 
 void reset_buffer()
 {
+    dprintf(WARN, "buffer=%p, cap=%u, off=%u", buffer, cap, off);
     init_buffer();
 }
 

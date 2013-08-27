@@ -46,7 +46,10 @@ void *ss_worker_thread(void *arg)
     fileinfo fi;
     size_t  patlen = strlen(opt.search_pattern);
 
-    init_buffer();
+    {
+        init_buffer();
+        kmp_prepare(opt.search_pattern, patlen);
+    }
 
     /* loop to read opened file descriptors from pipe */
     /* while ((n = read(pipefd[0], &fi, sizeof(struct fileinfo))) != 0) { */
@@ -126,11 +129,13 @@ void *ss_worker_thread(void *arg)
         cpu_relax();
     }
 
-    destroy_buffer();
-    /* kmp_finish(); */
+    {
+        destroy_buffer();
+        kmp_finish();
+        close(ss_result[tid][1]);
+        dprintf(INFO, "ss_result[%ld][1] closed", tid);
+    }
 
-    close(ss_result[tid][1]);
-    dprintf(INFO, "ss_result[%ld][1] closed", tid);
     return 0;
 }
 

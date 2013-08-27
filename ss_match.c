@@ -3,11 +3,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static __thread bool ready = false;
 static __thread int *kmp_table = NULL;
 
-
-static void kmp_prepare(const char *pattern, unsigned int pat_len) {
+void kmp_prepare(const char *pattern, unsigned int pat_len)
+{
+#ifdef SS_MALIGN
+    if (kmp_table == NULL &&
+        posix_memalign((void **)&kmp_table, 0x1000,
+                       sizeof(int) * pat_len) != 0) {
+        printf("can't memalign memory");
+        exit(-1);
+    }
+#else
+    /* FIXME should not always malloc if the pattern remains the same */
+    if (kmp_table == NULL && (kmp_table = (int *)malloc(sizeof(int) * pat_len)) == NULL) {
+        printf("can't to malloc memory");
+        exit(-1);
+    }
+#endif
+#ifdef SS_MADV
+    if (madvise(kmp_table, sizeof(int) * pat_len,
+                MADV_WILLNEED | MADV_ZERO_WIRED_PAGES) < 0) {
+        perror("fail to madvise");
+    }
+#endif
 
     kmp_table[0] = 0;
     int i;
@@ -30,32 +49,6 @@ int32_t kmp_match(const char *text, int text_len, const char *pat, int pat_len, 
     int pat_pos = 0;        /* index points to locations of pattern */
     int text_pos = 0;       /* index points to locations of text  */
     int line_cnt = *linum;
-
-    /* array holding the prefix vector */
-
-    if (!ready) {
-        printf("-------------not ready");
-#ifdef SS_MALIGN
-        if (kmp_table == NULL && posix_memalign((void **)&kmp_table, 0x1000, sizeof(int) * pat_len) != 0) {
-            printf("can't memalign memory");
-            exit(-1);
-        }
-#else
-        /* FIXME should not always malloc if the pattern remains the same */
-        if (kmp_table == NULL && (kmp_table = (int *)malloc(sizeof(int) * pat_len)) == NULL) {
-            printf("can't to malloc memory");
-            exit(-1);
-        }
-#endif
-#ifdef SS_MADV
-        if (madvise(kmp_table, sizeof(int) * pat_len,
-                    MADV_WILLNEED | MADV_ZERO_WIRED_PAGES) < 0) {
-            perror("fail to madvise");
-        }
-#endif
-        kmp_prepare(pat, pat_len);
-        ready = true;
-    }
 
     while (text_pos < text_len) {
         if (text[text_pos] == '\n')
@@ -102,7 +95,7 @@ found:
 
 void kmp_finish()
 {
-    if (kmp_table) {
+    if (kmp_table != NULL) {
         free(kmp_table);
         kmp_table = NULL;
     }
