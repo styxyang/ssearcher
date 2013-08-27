@@ -32,12 +32,10 @@ static int32_t begin_of_line(char *p, int32_t mid)
 {
     while (mid >= 0) {
         if (p[mid] == '\n')
-            return mid + 1;
+            break;
         mid--;
     }
-    if (mid != 0)
-        return -1;
-    return 0;
+    return (mid + 1);
 }
 
 void *ss_worker_thread(void *arg)
@@ -88,6 +86,7 @@ void *ss_worker_thread(void *arg)
             /* if (matchpos < 0 || !inbound(matchpos)) */
             if (matchpos < 0)
                 break;
+            dprintf(INFO, "<%s> match at %d", fi.filename, matchpos);
 
             memset(buf, 0, sizeof(buf));
             int32_t bol;
@@ -199,34 +198,46 @@ void *ss_dispatcher_thread(void *arg)
     FTS *pfts = fts_open(path_argv, FTS_LOGICAL, NULL);
     dprintf(INFO, "open current directory");
     while (fts_entry = fts_read(pfts)) {
-        if (S_ISREG(fts_entry->fts_statp->st_mode)) {
-            /* printf("%s %s %d\n", fts_entry->fts_path, fts_entry->fts_accpath, fts_entry->fts_level); */
-            int fd;
-            if ((fd = open(fts_entry->fts_path, O_RDONLY)) == -1) {
-                dprintf(ERROR, "fail to open file for read: %s", fts_entry->fts_path);
-                continue;
-            }
-            dprintf(INFO, "open file: %d %s\n", fd, fts_entry->fts_path);
-
-            /* test whether the file is binary */
-            /* and close binary file */
-            if (magic_scan(fd)) {
-                dprintf(WARN, "close binary %s", fts_entry->fts_path);
-                close(fd);
-                continue;
-            }
-
-            fileinfo fi;
-            memset(&fi, 0, sizeof(fileinfo));
-            fi.fd = fd;
-            memcpy(fi.filename, fts_entry->fts_name, fts_entry->fts_namelen);
-            /* if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) { */
-            /*     perror("write pipefd\n"); */
-            /* } */
-            if (write(pipefd[1], &fi, sizeof(fileinfo)) != sizeof(fileinfo)) {
-                perror("write pipefd\n");
-            }
+        if (strcmp(fts_entry->fts_name, ".git") == 0) {
+            fts_set(pfts, fts_entry, FTS_SKIP);
+            goto next_entry;
         }
+
+        if (strcmp(fts_entry->fts_name, ".svn") == 0) {
+            fts_set(pfts, fts_entry, FTS_SKIP);
+            goto next_entry;
+        }
+
+        if (!S_ISREG(fts_entry->fts_statp->st_mode)) {
+            goto next_entry;
+        }
+
+        int fd;
+        if ((fd = open(fts_entry->fts_path, O_RDONLY)) == -1) {
+            dprintf(ERROR, "fail to open file for read: %s", fts_entry->fts_path);
+            continue;
+        }
+        dprintf(INFO, "open file: %d %s\n", fd, fts_entry->fts_path);
+
+        /* test whether the file is binary */
+        /* and close binary file */
+        if (magic_scan(fd)) {
+            dprintf(WARN, "close binary %s", fts_entry->fts_path);
+            close(fd);
+            continue;
+        }
+
+        fileinfo fi;
+        memset(&fi, 0, sizeof(fileinfo));
+        fi.fd = fd;
+        memcpy(fi.filename, fts_entry->fts_path, fts_entry->fts_pathlen);
+        /* if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) { */
+        /*     perror("write pipefd\n"); */
+        /* } */
+        if (write(pipefd[1], &fi, sizeof(fileinfo)) != sizeof(fileinfo)) {
+            perror("write pipefd\n");
+        }
+  next_entry:
         cpu_relax();
     }
     fts_close(pfts);
