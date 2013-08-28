@@ -25,6 +25,8 @@ extern int pipefd[2];
 extern int ss_result[NCPU][2];
 extern __thread size_t off;
 
+__thread long tid;
+
 pthread_mutex_t outmtx;
 pthread_mutex_t readmtx;
 
@@ -42,7 +44,7 @@ void *ss_worker_thread(void *arg)
 {
     ssize_t n, r;
     int     fd;
-    long    tid = (long)arg;
+    tid = (long)arg;
     fileinfo fi;
     size_t  patlen = strlen(opt.search_pattern);
 
@@ -89,13 +91,11 @@ void *ss_worker_thread(void *arg)
             /* if (matchpos < 0 || !inbound(matchpos)) */
             if (matchpos < 0)
                 break;
-            dprintf(INFO, "<%s> match at %d", fi.filename, matchpos);
+            dprintf(INFO, "T%d <%s> match at %d", tid, fi.filename, matchpos);
 
             memset(buf, 0, sizeof(buf));
             int32_t bol;
             if ((bol = begin_of_line(p, matchpos + startpos)) >= 0) {
-                dprintf(INFO, "write to result buffer");
-
                 static int cnt;
                 if (linum != lastline) {
                     writef_buffer(LINUM_COLOR "\n%u:" "\e[0m", linum);
@@ -104,7 +104,7 @@ void *ss_worker_thread(void *arg)
                     cnt = 1;
                 } else {
                     dprintf(WARN, "another match in the same line");
-                    amendline_color_buffer(nbuf, matchpos + startpos - bol, patlen, cnt);
+                    nbuf += amendline_color_buffer(nbuf, matchpos + startpos - bol, patlen, cnt);
                     cnt++;
                 }
             }
