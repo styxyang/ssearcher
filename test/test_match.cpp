@@ -50,10 +50,13 @@ TEST_F(MatchTest, KMPCheck)
 
     uint32_t linum;
     int pstart = 0;
+
+    kmp_prepare(pattern, 4);
     int pos = kmp_match(p + pstart, strlen(p), pattern, 4, &linum);
     EXPECT_EQ(strncmp(pattern, p + pos + pstart, 4), 0);
 
     pstart = pos + 4;
     pos = kmp_match(p + pstart, strlen(p), pattern, 4, &linum);
     EXPECT_EQ(strncmp(pattern, p + pos + pstart, 4), 0);
+    kmp_finish();
 }
