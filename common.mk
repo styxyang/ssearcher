@@ -1,6 +1,6 @@
-SS_CC=$(QUIET_CC)$(CC)
-SS_CXX=$(QUIET_CXX)$(CXX)
-SS_LD=$(QUIET_LINK)$(CC)
+SF_CC=$(QUIET_CC)$(CC)
+SF_CXX=$(QUIET_CXX)$(CXX)
+SF_LD=$(QUIET_LINK)$(CC)
 CFLAGS += -O0 -g
 
 # -pthread is not needed on Darwin

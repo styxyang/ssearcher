@@ -1,8 +1,8 @@
-#include "ss_config.h"
-#include "ss_options.h"
-#include "ss_match.h"
-#include "ss_debug.h"
-#include "ss_thread.h"
+#include "config.h"
+#include "options.h"
+#include "match.h"
+#include "debug.h"
+#include "thread.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -22,9 +22,9 @@
 
 pthread_t pid[NTHR];
 int pipefd[2];
-int ss_result[NCPU][2];
+int result[NCPU][2];
 
-void ss_init()
+void sf_init()
 {
     int i;
 
@@ -34,20 +34,20 @@ void ss_init()
     }
 
     for (i = 0; i < NCPU; i++) {
-        if (pipe(ss_result[i]) == -1) {
+        if (pipe(result[i]) == -1) {
             perror("pipe");
             exit(EXIT_FAILURE);
         }
     }
 }
 
-void ss_exit()
+void sf_exit()
 {
     int i;
     close(pipefd[0]);
 }
 
-int ss_check_buffer()
+int sf_check_buffer()
 {
     int i;
 
@@ -55,7 +55,7 @@ int ss_check_buffer()
     memset(&fdset, 0, sizeof(fdset));
 
     for (i = 0; i < NCPU; ++i) {
-        fdset[i].fd = ss_result[i][0];
+        fdset[i].fd = result[i][0];
         fdset[i].events = POLLIN;
         fdset[i].revents = 0;
     }
@@ -105,11 +105,11 @@ void test_procon()
 {
     pthread_mutex_init(&outmtx, NULL);
     pthread_mutex_init(&readmtx, NULL);
-    pthread_create(&pid[0], NULL, ss_dispatcher_thread, NULL);
-    pthread_create(&pid[1], NULL, ss_worker_thread, (void *)0);
-    pthread_create(&pid[2], NULL, ss_worker_thread, (void *)1);
-    /* pthread_create(&pid[2], NULL, ss_worker_thread, NULL); */
-    /* ss_check_buffer(); */
+    pthread_create(&pid[0], NULL, dispatcher_thread, NULL);
+    pthread_create(&pid[1], NULL, worker_thread, (void *)0);
+    pthread_create(&pid[2], NULL, worker_thread, (void *)1);
+    /* pthread_create(&pid[2], NULL, worker_thread, NULL); */
+    /* check_buffer(); */
     pthread_join(pid[0], NULL);
     pthread_join(pid[1], NULL);
     pthread_join(pid[2], NULL);
@@ -121,8 +121,8 @@ void test_procon()
 int main(int argc, char *argv[])
 {
     parse_options(argc, argv);
-    ss_init();
+    sf_init();
     test_procon();
-    ss_exit();
+    sf_exit();
     return 0;
 }

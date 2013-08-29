@@ -1,5 +1,5 @@
-#include "ss_config.h"
-#include "ss_match.h"
+#include "config.h"
+#include "match.h"
 #include <stdio.h>
 #include <stdlib.h>
 

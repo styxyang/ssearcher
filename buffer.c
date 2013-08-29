@@ -1,6 +1,6 @@
-#include "ss_debug.h"
-#include "ss_config.h"
-#include "ss_buffer.h"
+#include "debug.h"
+#include "config.h"
+#include "buffer.h"
 
 #include <string.h>
 #include <stdarg.h>

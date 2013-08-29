@@ -1,7 +1,7 @@
 #ifndef SS_TRIE_H
 #define SS_TRIE_H
 
-#include "ss_config.h"
+#include "config.h"
 
 #define MAX_CHILDREN 256
 

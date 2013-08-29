@@ -1,7 +1,7 @@
 #ifndef SS_POOL_H_
 #define SS_POOL_H_
 
-#include "ss_config.h"
+#include "config.h"
 #include <pthread.h>
 
 #define ENABLE_FTS
@@ -19,8 +19,8 @@
     } while (0)
 #endif
 
-void *ss_dispatcher_thread(void *);
-void *ss_worker_thread(void *arg);
+void *dispatcher_thread(void *);
+void *worker_thread(void *arg);
 
 extern pthread_mutex_t outmtx;
 extern pthread_mutex_t readmtx;

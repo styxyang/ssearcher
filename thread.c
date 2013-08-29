@@ -1,11 +1,11 @@
-#include "ss_config.h"
-#include "ss_debug.h"
-#include "ss_thread.h"
-#include "ss_magic.h"
-#include "ss_file.h"
-#include "ss_match.h"
-#include "ss_options.h"
-#include "ss_buffer.h"
+#include "config.h"
+#include "debug.h"
+#include "thread.h"
+#include "magic.h"
+#include "file.h"
+#include "match.h"
+#include "options.h"
+#include "buffer.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -22,7 +22,7 @@
 #endif
 
 extern int pipefd[2];
-extern int ss_result[NCPU][2];
+extern int result[NCPU][2];
 extern __thread size_t off;
 
 __thread long tid;
@@ -40,7 +40,7 @@ static int32_t begin_of_line(char *p, int32_t mid)
     return (mid + 1);
 }
 
-void *ss_worker_thread(void *arg)
+void *worker_thread(void *arg)
 {
     ssize_t n, r;
     int     fd;
@@ -111,7 +111,7 @@ void *ss_worker_thread(void *arg)
             /* There should be no exceptions */
 
             /* dprintf(INFO, "write to result pipe\n"); */
-            /* write(ss_result[tid][1], buf, sizeof(buf)); */
+            /* write(result[tid][1], buf, sizeof(buf)); */
             startpos += matchpos + patlen;
         }
 
@@ -132,14 +132,14 @@ void *ss_worker_thread(void *arg)
     {
         destroy_buffer();
         kmp_finish();
-        close(ss_result[tid][1]);
-        dprintf(INFO, "ss_result[%ld][1] closed", tid);
+        close(result[tid][1]);
+        dprintf(INFO, "result[%ld][1] closed", tid);
     }
 
     return 0;
 }
 
-void *ss_dispatcher_thread(void *arg)
+void *dispatcher_thread(void *arg)
 {
     struct stat    statbuf;
     DIR           *d;

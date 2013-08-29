@@ -1,7 +1,7 @@
 #ifndef SS_FILE_H
 #define SS_FILE_H
 
-#include "ss_config.h"
+#include "config.h"
 
 #define MAXPATH 255
 

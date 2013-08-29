@@ -1,7 +1,7 @@
-#include "ss_config.h"
-#include "ss_debug.h"
-#include "ss_magic.h"
-#include "ss_trie.h"
+#include "config.h"
+#include "debug.h"
+#include "magic.h"
+#include "trie.h"
 
 #define M_3GPP_FTYP        0x0000001466747970
 #define M_MP4_FTYP         0x0000001866747970

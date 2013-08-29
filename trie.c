@@ -1,5 +1,5 @@
-#include "ss_config.h"
-#include "ss_trie.h"
+#include "config.h"
+#include "trie.h"
 
 #include <stdio.h>
 #include <stdlib.h>

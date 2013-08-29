@@ -1,5 +1,5 @@
-#include "ss_file.h"
-#include "ss_debug.h"
+#include "file.h"
+#include "debug.h"
 
 #include <unistd.h>
 #include <sys/mman.h>

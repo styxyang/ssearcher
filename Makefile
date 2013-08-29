@@ -4,7 +4,8 @@
 # Copyright (c) 2013 by Yang Hong <hy dot styx at gmail dot com>
 #
 
-SUBDIR := snippets test
+# SUBDIR := snippets test
+SUBDIR := 
 OBJDIR := obj
 DEPDIR := dep
 UNAME_S := $(shell uname -s)
@@ -24,7 +25,7 @@ TARGETS :=
 # Make sure that 'default' is the first target
 default:
 
-include ss.mk
+include sf.mk
 include $(patsubst %, %/rules.mk, $(SUBDIR))
 include common.mk
 
@@ -46,11 +47,11 @@ include $(patsubst %.c, $(DEPDIR)/%.d,$(SRCS))
 # -MM: specify input file(s)
 $(DEPDIR)/%.d: %.c
 	@mkdir -p $(@D)
-	$(SS_CC) $(CFLAGS) -I. -MM $< -MT $(patsubst %.c,$(OBJDIR)/%.o, $<) > $@;
+	$(SF_CC) $(CFLAGS) -I. -MM $< -MT $(patsubst %.c,$(OBJDIR)/%.o, $<) > $@;
 
 $(OBJDIR)/%.o: %.c
 	@mkdir -p $(@D)
-	$(SS_CC) $(CFLAGS) -I. -c $< -o $@
+	$(SF_CC) $(CFLAGS) -I. -c $< -o $@
 
 clean:
 	rm -rf $(TARGETS) $(TEST_SUITE) *.dSYM
