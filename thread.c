@@ -25,19 +25,22 @@ extern int pipefd[2];
 extern int result[NCPU][2];
 extern __thread size_t off;
 
+/* thread id */
 __thread long tid;
 
 pthread_mutex_t outmtx;
 pthread_mutex_t readmtx;
 
-static int32_t begin_of_line(char *p, int32_t mid)
+/* find the beginning offset of the line which contains
+ * the `mid' position */
+static uint32_t begin_of_line(char *fb, uint32_t mid)
 {
-    while (mid >= 0) {
-        if (p[mid] == '\n')
+    while (mid > 0) {
+        if (fb[mid - 1] == '\n')
             break;
         mid--;
     }
-    return (mid + 1);
+    return mid;
 }
 
 void *worker_thread(void *arg)
@@ -48,14 +51,15 @@ void *worker_thread(void *arg)
     fileinfo fi;
     size_t  patlen = strlen(opt.search_pattern);
 
+    /* init block */
     {
         init_buffer();
         kmp_prepare(opt.search_pattern, patlen);
     }
 
     /* loop to read opened file descriptors from pipe */
-    /* while ((n = read(pipefd[0], &fi, sizeof(struct fileinfo))) != 0) { */
     while (1) {
+        /* FIXME use queue to replace the pipe */
         pthread_mutex_lock(&readmtx);
         n = read(pipefd[0], &fi, sizeof(fileinfo));
         pthread_mutex_unlock(&readmtx);
@@ -69,44 +73,49 @@ void *worker_thread(void *arg)
         }
 
         char buf[16];
-        char *p;
-        if ((p = map_file(&fi)) == NULL) {
+        char *fb;  /* `fb' for file buffer */
+        if ((fb = map_file(&fi)) == NULL) {
             close(fi.fd);
             cpu_relax();
             continue;
         }
 
-        int32_t matchpos = 0, startpos = 0;
+        /* `matchpos': the position matched in every iteration
+         * `startpos': the position where every iteration starts */
+        uint32_t matchpos = 0, startpos = 0;
+
+        /* `linum': line number of every match result, initial line number is 1
+         * 'lastlinum': line number of last match, used to mark matches in 
+         *              the same line */
         uint32_t linum = 1;
-        uint32_t lastline = 0;
-        size_t nbuf = 0;
+        uint32_t lastlinum = 0;
+
+        /* `nll' for number of chars in last line */
+        size_t nll = 0;
 
         /* FIXME opt.search_pattern should be guarenteed to be not null */
+        /* XXX shall we use likely/unlikely to do branch prediction? */
         while (1) {
-            matchpos = kmp_match(p + startpos,
-                                 fi.size - startpos,
-                                 opt.search_pattern,
-                                 patlen,
-                                 &linum);
-            /* if (matchpos < 0 || !inbound(matchpos)) */
-            if (matchpos < 0)
+            if (!kmp_match(fb + startpos, fi.size - startpos,
+                                    &linum, &matchpos)) {
                 break;
+            }
+
             dprintf(INFO, "T%d <%s> match at %d", tid, fi.filename, matchpos);
 
             memset(buf, 0, sizeof(buf));
-            int32_t bol;
-            if ((bol = begin_of_line(p, matchpos + startpos)) >= 0) {
-                static int cnt;
-                if (linum != lastline) {
-                    writef_buffer(LINUM_COLOR "\n%u:" "\e[0m", linum);
-                    nbuf = writeline_color_buffer(p + bol, 1024, matchpos + startpos - bol, patlen);
-                    lastline = linum;
-                    cnt = 1;
-                } else {
-                    dprintf(WARN, "another match in the same line");
-                    nbuf += amendline_color_buffer(nbuf, matchpos + startpos - bol, patlen, cnt);
-                    cnt++;
-                }
+
+            static int cnt;
+            uint32_t bol = begin_of_line(fb, matchpos + startpos);
+            if (linum != lastlinum) {
+                writef_buffer(LINUM_COLOR "\n%u:" "\e[0m", linum);
+                nll = writeline_color_buffer(fb + bol, 1024, matchpos + startpos - bol, patlen);
+                lastlinum = linum;
+                cnt = 1;
+            } else {
+                dprintf(WARN, "another match in the same line");
+                nll += amendline_color_buffer(nll, matchpos + startpos - bol, patlen, cnt);
+                cnt++;
             }
             /* There should be no exceptions */
 
@@ -203,7 +212,7 @@ void *dispatcher_thread(void *arg)
     FTSENT *fts_entry = NULL;
     FTS *pfts = fts_open(path_argv, FTS_LOGICAL, NULL);
     dprintf(INFO, "open current directory");
-    while (fts_entry = fts_read(pfts)) {
+    while ((fts_entry = fts_read(pfts))) {
         if (strcmp(fts_entry->fts_name, ".git") == 0) {
             fts_set(pfts, fts_entry, FTS_SKIP);
             goto next_entry;

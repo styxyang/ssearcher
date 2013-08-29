@@ -3,10 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static __thread int *kmp_table = NULL;
+static __thread char const  *pat;
+static __thread size_t       pat_len;
+static __thread int         *kmp_table = NULL;
 
-void kmp_prepare(const char *pattern, unsigned int pat_len)
+void kmp_prepare(const char *pattern, size_t pattern_length)
 {
+    pat     = pattern;
+    pat_len = pattern_length;
 #ifdef SS_MALIGN
     if (kmp_table == NULL &&
         posix_memalign((void **)&kmp_table, 0x1000,
@@ -43,7 +47,8 @@ void kmp_prepare(const char *pattern, unsigned int pat_len)
 /* use KMP algorithm to do string matching
  * `linum' is the current line number and will increase
  * with the process of matching */
-int32_t kmp_match(const char *text, int text_len, const char *pat, int pat_len, uint32_t *linum)
+bool kmp_match(const char *text, size_t text_len,
+               uint32_t *linum, uint32_t *matchpos)
 {
     /* int max_match = 0; */
     int pat_pos = 0;        /* index points to locations of pattern */
@@ -85,12 +90,14 @@ int32_t kmp_match(const char *text, int text_len, const char *pat, int pat_len, 
         }
     }
     *linum = line_cnt;
-    return -1;
+    *matchpos = -1L;
+    return false;
 found:
     /* would it be unnecessary to freeit?
      * since it will be only executed quickly and then terminated */
     *linum = line_cnt;
-    return text_pos - pat_len + 1;
+    *matchpos = text_pos - pat_len + 1;
+    return true;
 }
 
 void kmp_finish()

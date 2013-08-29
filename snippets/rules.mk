@@ -11,7 +11,7 @@ test_pipe_BIN := test_pipe
 
 # FIXME: ../pipe.o is the prerequisition of make ..
 $(test_pipe_BIN): $(test_pipe_OBJ)
-	$(SS_LD) -o $@ $^ $(LDFLAGS)
+	$(SF_LD) -o $@ $^ $(LDFLAGS)
 
 SRCS += $(test_pipe_SRC)
 TARGETS += $(test_pipe_BIN)

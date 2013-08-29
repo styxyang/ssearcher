@@ -3,8 +3,8 @@
 
 #define SS_MALIGN
 
-void kmp_prepare(const char *pattern, unsigned int pat_len);
-int32_t kmp_match(const char *text, int text_len, const char *pat, int pat_len, uint32_t *linum);
+void kmp_prepare(const char *pattern, size_t pat_len);
+bool kmp_match(const char *text, size_t text_len, uint32_t *linum, uint32_t *matchpos);
 void kmp_finish();
 
 #endif /* SS_MATCH_H */
