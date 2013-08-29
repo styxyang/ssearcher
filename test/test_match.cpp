@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 
 extern "C" {
-#include "ss_config.h"
-#include "ss_match.h"
+#include "config.h"
+#include "match.h"
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>

@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
 
 extern "C" {
-#include "ss_config.h"
-#include "ss_trie.h"
-#include "ss_magic.h"
+#include "config.h"
+#include "trie.h"
+#include "magic.h"
 }
 
 using namespace std;

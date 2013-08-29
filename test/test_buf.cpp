@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 
 extern "C" {
-#include "ss_config.h"
-#include "ss_buffer.h"
+#include "config.h"
+#include "buffer.h"
 #include <string.h>
 
 extern __thread char  *buffer;

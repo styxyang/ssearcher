@@ -15,5 +15,5 @@ magic.c: magic.c.tmpl
 OBJS += $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 
 sf: $(OBJS)
-	$(LD) $^ -o $@ $(LDFLAGS)
+	$(SF_LD) $^ -o $@ $(LDFLAGS)
 

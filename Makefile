@@ -4,8 +4,7 @@
 # Copyright (c) 2013 by Yang Hong <hy dot styx at gmail dot com>
 #
 
-# SUBDIR := snippets test
-SUBDIR := 
+SUBDIR := snippets test
 OBJDIR := obj
 DEPDIR := dep
 UNAME_S := $(shell uname -s)
