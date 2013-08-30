@@ -8,6 +8,7 @@
 typedef struct {
     int   str_matching_algo;
     char *search_pattern;
+    int   search_patlen;
     char *input_file;
     char *input_dir;
 } cli_options;

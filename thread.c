@@ -43,18 +43,37 @@ static uint32_t begin_of_line(char *fb, uint32_t mid)
     return mid;
 }
 
+static void worker_writebuffer(char *fb, uint32_t pos,
+                               uint32_t linum, uint32_t lastlinum)
+{
+    static size_t nll = 0; /* `nll' number of chars in last line */
+    static int cnt;        /* `cnt' number of matches in this line */
+
+    uint32_t bol = begin_of_line(fb, pos);
+    if (linum != lastlinum) {
+        writef_buffer(LINUM_COLOR "\n%u:" "\e[0m", linum);
+        nll = writeline_color_buffer(fb + bol, 1024, pos - bol, opt.search_patlen);
+        lastlinum = linum;
+        cnt = 1;
+    } else {
+        dprintf(WARN, "another match in the same line");
+        nll += amendline_color_buffer(nll, pos - bol,
+                                      opt.search_patlen, cnt);
+        cnt++;
+    }
+}
+
 void *worker_thread(void *arg)
 {
     ssize_t n, r;
     int     fd;
     tid = (long)arg;
     fileinfo fi;
-    size_t  patlen = strlen(opt.search_pattern);
 
     /* init block */
     {
         init_buffer();
-        kmp_prepare(opt.search_pattern, patlen);
+        kmp_prepare(opt.search_pattern, opt.search_patlen);
     }
 
     /* loop to read opened file descriptors from pipe */
@@ -90,9 +109,6 @@ void *worker_thread(void *arg)
         uint32_t linum = 1;
         uint32_t lastlinum = 0;
 
-        /* `nll' for number of chars in last line */
-        size_t nll = 0;
-
         /* FIXME opt.search_pattern should be guarenteed to be not null */
         /* XXX shall we use likely/unlikely to do branch prediction? */
         while (1) {
@@ -101,27 +117,15 @@ void *worker_thread(void *arg)
                 break;
             }
 
-            dprintf(INFO, "T%d <%s> match at %d", tid, fi.filename, matchpos);
+            dprintf(INFO, "T%d <%s> match at %d", tid, fi.filename, matchpos + startpos);
 
             memset(buf, 0, sizeof(buf));
-
-            static int cnt;
-            uint32_t bol = begin_of_line(fb, matchpos + startpos);
-            if (linum != lastlinum) {
-                writef_buffer(LINUM_COLOR "\n%u:" "\e[0m", linum);
-                nll = writeline_color_buffer(fb + bol, 1024, matchpos + startpos - bol, patlen);
-                lastlinum = linum;
-                cnt = 1;
-            } else {
-                dprintf(WARN, "another match in the same line");
-                nll += amendline_color_buffer(nll, matchpos + startpos - bol, patlen, cnt);
-                cnt++;
-            }
+            worker_writebuffer(fb, matchpos + startpos, linum, lastlinum);
             /* There should be no exceptions */
 
             /* dprintf(INFO, "write to result pipe\n"); */
             /* write(result[tid][1], buf, sizeof(buf)); */
-            startpos += matchpos + patlen;
+            startpos += matchpos + opt.search_patlen;
         }
 
         if (off) {
