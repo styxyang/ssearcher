@@ -43,6 +43,7 @@ static uint32_t begin_of_line(char *fb, uint32_t mid)
     return mid;
 }
 
+/* write matched data to buffer with line number `linum' and `lastlinum' */
 static void worker_writebuffer(char *fb, uint32_t pos,
                                uint32_t linum, uint32_t lastlinum)
 {
@@ -117,7 +118,8 @@ void *worker_thread(void *arg)
                 break;
             }
 
-            dprintf(INFO, "T%d <%s> match at %d", tid, fi.filename, matchpos + startpos);
+            dprintf(INFO, "T%d <%s> match at %d", tid, fi.filename,
+                    matchpos + startpos);
 
             memset(buf, 0, sizeof(buf));
             worker_writebuffer(fb, matchpos + startpos, linum, lastlinum);
@@ -128,6 +130,7 @@ void *worker_thread(void *arg)
             startpos += matchpos + opt.search_patlen;
         }
 
+        /* if offset is not zero, buffer contains something to write */
         if (off) {
             /* FIXME abstract as `write_filename' maybe */
             pthread_mutex_lock(&outmtx);

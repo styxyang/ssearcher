@@ -10,7 +10,7 @@ typedef struct {
     char *search_pattern;
     int   search_patlen;
     char *input_file;
-    char *input_dir;
+    char **input_dirs;
 } cli_options;
 
 extern cli_options opt;

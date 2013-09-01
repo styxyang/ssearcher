@@ -30,7 +30,6 @@ void parse_options(int argc, char *argv[]) {
     struct option longopts[] = {
         { "kmp",  no_argument,       &opt.str_matching_algo, 0 },
         { "file", required_argument, NULL,                   0 },
-        { "dir",  required_argument, NULL,                   0 }
     };
 
     /* since the arguments are not so many
@@ -44,8 +43,6 @@ void parse_options(int argc, char *argv[]) {
                 dprintf(INFO, "%d, %d\n", optopt, optind);
                 if (strcmp(longopts[opt_idx].name, "file") == 0) {
                     opt.input_file = optarg;
-                } else if (strcmp(longopts[opt_idx].name, "dir") == 0) {
-                    opt.input_dir = optarg;
                 } else if (opt.str_matching_algo == SM_ALGO_KMP) {
                     printf("using KMP algorithm\n");
                 }
@@ -61,14 +58,18 @@ void parse_options(int argc, char *argv[]) {
     /* argv += optind; */
 
     if (optind >= argc) {
-        dprintf(ERROR, "parse_options: missing pattern string");
         print_usage();
     }
-    opt.search_pattern = argv[optind];
+    opt.search_pattern = argv[optind++];
     opt.search_patlen = strlen(opt.search_pattern);
+
+    if (optind < argc) {
+        dprintf(ERROR, "%d %d", optind, argc);
+        opt.input_dirs = argv + optind;
+    }
     printf("search for \"%s\"-%zd\n", opt.search_pattern, opt.search_patlen);
 
-    if (!opt.input_file && !opt.input_dir) {
+    if (!opt.input_file && !opt.input_dirs) {
         dprintf(ERROR, "parse_options: missing search scope");
         printf("default in current directory\n");
         if (!opt.search_pattern) {

@@ -64,6 +64,7 @@ struct trie *trie_lookup(struct trie *root, uint8_t *target, int size)
     return trie_walk(root, target, size, false, false);
 }
 
+/* will return the node regardless of whether it is a leaf */
 struct trie *trie_scan(struct trie *root, uint8_t *target, int size)
 {
     assert(root);
