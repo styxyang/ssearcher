@@ -1,5 +1,5 @@
-#include "options.h"
 #include "debug.h"
+#include "options.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +19,7 @@ static void print_usage()
     fprintf(stdout,
             "  -h  --help             Display this usage information.\n"
             "  -o  --output filename  Write output to file.\n"
+            "  -l  --list             Print verbose messages.\n"
             "  -v  --verbose          Print verbose messages.\n");
     exit(1);
 }
@@ -35,10 +36,13 @@ void parse_options(int argc, char *argv[]) {
     /* since the arguments are not so many
      * I can still cope with them without checking whether opt_idx
      * has changed. Unchanged opt_idx means the opt is a short opt */
-    while ((ch = getopt_long(argc, argv, "", longopts, &opt_idx)) != -1) {
+    while ((ch = getopt_long(argc, argv, "l", longopts, &opt_idx)) != -1) {
         switch (ch) {
             case '?':
                 print_usage();
+            case 'l':
+                printf("print file list only\n");
+                opt.list_matching_files = true;
             case 0:
                 dprintf(INFO, "%d, %d\n", optopt, optind);
                 if (strcmp(longopts[opt_idx].name, "file") == 0) {

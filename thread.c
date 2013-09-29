@@ -134,8 +134,9 @@ void *worker_thread(void *arg)
         if (off) {
             /* FIXME abstract as `write_filename' maybe */
             pthread_mutex_lock(&outmtx);
-            fprintf(stdout, FNAME_COLOR "\n%s" "\e[0m", fi.filename);
-            fprintf(stdout, "%s\n", read_buffer());
+            fprintf(stdout, FNAME_COLOR "%s" "\e[0m\n", fi.filename);
+            if (!opt.list_matching_files)
+                fprintf(stdout, "%s\n", read_buffer());
             pthread_mutex_unlock(&outmtx);
             fflush(NULL);
         }
