@@ -23,6 +23,29 @@ extern __thread long tid;
 static long grow_cnt = 0;
 #endif
 
+/* set_rope set the string content of a leaf rope */
+static inline void rope_set(struct rope *r, const char *str, uint8_t tag)
+{
+    r->pstr = strdup(str);
+    r->tag = tag;
+}
+
+/* tear_rope destroy a rope */
+static inline void rope_tear(struct rope *r)
+{
+    if (r->isleaf)
+    free(r->pstr);
+}
+
+/* join_rope join two ropes as a new rope */
+static inline void rope_join(struct rope *r, uint32_t offset, struct rope *r1, struct rope *r2)
+{
+    r->left = r1;
+    r->right = r2;
+    r->isleaf = 0;
+    r->tag = TAG_DEFAULT;
+}
+
 static void buffer_grow(size_t len)
 {
     size_t newcap = cap;
