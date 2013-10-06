@@ -2,7 +2,7 @@
 
 extern "C" {
 #include "config.h"
-#include "trie.h"
+#include "util.h"
 #include "magic.h"
 }
 

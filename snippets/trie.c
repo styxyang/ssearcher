@@ -1,4 +1,4 @@
-#include "trie.h"
+#include "util.h"
 #include "../config.h"
 
 #include <stdio.h>

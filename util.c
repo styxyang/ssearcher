@@ -1,5 +1,5 @@
 #include "config.h"
-#include "trie.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdlib.h>

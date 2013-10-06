@@ -3,7 +3,7 @@
 # 
 # Follow the example to add more unit tests
 
-test_trie: test/test_trie.cpp obj/trie.o
+test_trie: test/test_trie.cpp obj/util.o
 	$(SF_CXX) $(CFLAGS) $(TEST_HEADERS) $(TEST_LD_PATH) -o $@ $^ $(TEST_LDFLAGS)
 
 test_buf: test/test_buf.cpp obj/buffer.o

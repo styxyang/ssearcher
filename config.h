@@ -32,6 +32,13 @@ typedef unsigned char     bool;
 #define likely(x)   __builtin_expect((x), true)
 #define unlikely(x) __builtin_expect((x), false)
 
+#undef offsetof
+#ifdef __compiler_offsetof
+#define offsetof(TYPE,MEMBER) __compiler_offsetof(TYPE,MEMBER)
+#else
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+#endif
+
 #define NCPU 2
 #define NTHR 3
 

@@ -4,7 +4,7 @@ SRCS +=	options.c	\
 	main.c		\
 	match.c		\
 	thread.c	\
-	trie.c		\
+	util.c		\
 	magic.c		\
 	file.c		\
 	buffer.c
