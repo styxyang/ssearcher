@@ -7,7 +7,7 @@
 
 typedef struct {
     int    fd;
-    char   filename[MAXPATH];  /* may resort to `readlink' */
+    char  *filename;  /* may resort to `readlink' */
     char  *pmap;
     size_t size;
 } fileinfo;

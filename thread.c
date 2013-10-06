@@ -138,6 +138,7 @@ void *worker_thread(void *arg)
             if (!opt.list_matching_files)
                 fprintf(stdout, "%s\n", read_buffer());
             pthread_mutex_unlock(&outmtx);
+            free(fi.filename);
             fflush(NULL);
         }
 
@@ -201,7 +202,9 @@ void *dispatcher_thread(void *arg)
             fileinfo fi;
             memset(&fi, 0, sizeof(fileinfo));
             fi.fd = fd;
-            memcpy(fi.filename, entry->d_name, strlen(entry->d_name));
+            /* memcpy(fi.filename, entry->d_name, strlen(entry->d_name)); */
+            /* on OS X, should use `strndup(entry->d_name, entry->d_namelen)' */
+            fi.filename = strdup(entry->d_name);
             /* if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) { */
             /*     perror("write pipefd\n"); */
             /* } */
@@ -258,7 +261,9 @@ void *dispatcher_thread(void *arg)
         fileinfo fi;
         memset(&fi, 0, sizeof(fileinfo));
         fi.fd = fd;
-        memcpy(fi.filename, fts_entry->fts_path, fts_entry->fts_pathlen);
+        /* memcpy(fi.filename, fts_entry->fts_path, fts_entry->fts_pathlen); */
+        /* on OS X, should use `strndup(entry->d_name, entry->d_namelen)' */
+        fi.filename = strndup(fts_entry->fts_path, fts_entry->fts_pathlen);
         /* if (write(pipefd[1], &fd, sizeof(int)) != sizeof(int)) { */
         /*     perror("write pipefd\n"); */
         /* } */
