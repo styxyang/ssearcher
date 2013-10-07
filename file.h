@@ -11,7 +11,7 @@ typedef struct {
     char  *filename;  /* may resort to `readlink' */
     char  *pmap;      /* pointer to the mapped file in memory */
     size_t size;
-    rbuf   rb;        /* result buffer */
+    buffer rb;        /* result buffer */
 } fileinfo;
 
 void *map_file(fileinfo *fi);

@@ -5,7 +5,7 @@ extern "C" {
 #include "buffer.h"
 #include <string.h>
 
-extern __thread char  *buffer;
+extern __thread char  *buf;
 extern __thread size_t cap;
 extern __thread size_t off;
 }

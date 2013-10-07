@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "config.h"
 #include "buffer.h"
+#include "util.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -19,7 +20,7 @@
 
 #define DEFAULT_SIZE 4096
 
-__thread char  *buffer = NULL;
+__thread char  *buf = NULL;
 __thread size_t cap = 0;
 __thread size_t off = 0;
 
@@ -29,10 +30,17 @@ extern __thread long tid;
 static long grow_cnt = 0;
 #endif
 
+#ifdef ROPE
 /* set_rope set the string content of a leaf rope */
 static inline void rope_set(struct rope *r, const char *str, uint8_t tag)
 {
     r->pstr = strdup(str);
+    r->tag = tag;
+}
+
+static inline void rope_setn(struct rope *r, const char *str, uint32_t len, uint8_t tag)
+{
+    r->pstr = strndup(str, len);
     r->tag = tag;
 }
 
@@ -52,12 +60,80 @@ static inline void rope_join(struct rope *r, uint32_t offset, struct rope *r1, s
     r->tag = TAG_DEFAULT;
 }
 
+static inline bool rope_isleaf(struct rope *r)
+{
+    switch (r->tag) {
+        case TAG_DEFAULT:
+            return false;
+        default:
+            return true;
+    }
+}
+
+#endif  /* ROPE */
+
+void buf_init(buffer *buf)
+{
+    INIT_LIST_HEAD(&buf->ropelist);
+
+/*     if (buf->p != NULL) { */
+/* #ifdef DEBUG */
+/*         dprintf(WARN, "T%d before realloc buffer=%p cap=%u(%x) off=%u(%x)", */
+/*                 tid, buf->p, buf->cap, buf->cap, buf->off, buf->off); */
+/* #endif */
+/*         buf->p = realloc(buf->p, DEFAULT_SIZE * sizeof(char)); */
+
+/* #ifdef DEBUG */
+/*         dprintf(WARN, "T%d after realloc buffer=%p cap=%u(%x) off=%u(%x)", */
+/*                 tid, buf->p, buf->cap, buf->cap, buf->off, buf->off); */
+/* #endif */
+/*     } else { */
+/*         buf->p = malloc(DEFAULT_SIZE * sizeof(char)); */
+/*     } */
+/*     memset(buf->p, 0, DEFAULT_SIZE); */
+/*     buf->cap = DEFAULT_SIZE; */
+/*     buf->off = 0; */
+
+/* #ifdef DEBUG */
+/*     grow_cnt = 0; */
+/* #endif */
+}
+
+void buf_destroy(buffer *buf)
+{
+    struct rope *p, *prefetch;
+    for (p = list_entry(buf->ropelist.next, struct rope, lh),
+                 prefetch = list_entry(p->lh.next, struct rope, lh);
+         &p->lh != &buf->ropelist;
+         p = prefetch, prefetch = list_entry(p->lh.next, struct rope, lh)) {
+        free(p->pstr);
+        free(p);
+    }
+}
+
+size_t buf_write(buffer *buf, const char *content, size_t len)
+{
+    struct rope *pr = (struct rope *)malloc(sizeof(*pr));
+    rope_setn(pr, content, len, TAG_CONTEXT);
+    list_add_tail(&pr->lh, &buf->ropelist);
+}
+
+void buf_dump(buffer *buf)
+{
+    struct rope *p;
+    list_for_each_entry(p, &buf->ropelist, lh) {
+        if (rope_isleaf(p)) {
+            printf("%s\n", p->pstr);
+        }
+    }
+}
+
 static void buffer_grow(size_t len)
 {
     size_t newcap = cap;
 #ifdef DEBUG
     grow_cnt++;
-    dprintf(WARN, "T%d C%d old buffer=%p cap=%u(%x) off=%u(%x)",tid, grow_cnt, buffer, cap, cap, off, off);
+    dprintf(WARN, "T%d C%d old buffer=%p cap=%u(%x) off=%u(%x)",tid, grow_cnt, buf, cap, cap, off, off);
 #endif
 
     /* every time double the space */
@@ -69,29 +145,29 @@ static void buffer_grow(size_t len)
     /* free(buffer); */
     /* buffer = tmp; */
     /* cap = newcap; */
-    buffer = realloc(buffer, sizeof(char) * newcap);
-    memset(buffer + off, 0, newcap - off);
+    buf = realloc(buf, sizeof(char) * newcap);
+    memset(buf + off, 0, newcap - off);
     cap = newcap;
 #ifdef DEBUG
-    dprintf(WARN, "T%d C%d new buffer=%p cap=%u(%x) off=%u(%x)",tid, grow_cnt, buffer, cap, cap, off, off);
+    dprintf(WARN, "T%d C%d new buffer=%p cap=%u(%x) off=%u(%x)",tid, grow_cnt, buf, cap, cap, off, off);
 #endif
 }
 
 void init_buffer()
 {
-    if (buffer != NULL) {
+    if (buf != NULL) {
 #ifdef DEBUG
-        dprintf(WARN, "T%d before realloc buffer=%p cap=%u(%x) off=%u(%x)", tid, buffer, cap, cap, off, off);
+        dprintf(WARN, "T%d before realloc buffer=%p cap=%u(%x) off=%u(%x)", tid, buf, cap, cap, off, off);
 #endif
-        buffer = realloc(buffer, DEFAULT_SIZE * sizeof(char));
+        buf = realloc(buf, DEFAULT_SIZE * sizeof(char));
 
 #ifdef DEBUG
-        dprintf(WARN, "T%d after realloc buffer=%p cap=%u(%x) off=%u(%x)", tid, buffer, DEFAULT_SIZE, DEFAULT_SIZE, 0, 0);
+        dprintf(WARN, "T%d after realloc buffer=%p cap=%u(%x) off=%u(%x)", tid, buf, DEFAULT_SIZE, DEFAULT_SIZE, 0, 0);
 #endif
     } else {
-        buffer = malloc(DEFAULT_SIZE * sizeof(char));
+        buf = malloc(DEFAULT_SIZE * sizeof(char));
     }
-    memset(buffer, 0, DEFAULT_SIZE);
+    memset(buf, 0, DEFAULT_SIZE);
     cap = DEFAULT_SIZE;
     off = 0;
 
@@ -107,13 +183,13 @@ size_t write_buffer(const char *content, size_t len)
         dprintf(WARN, "insufficient buffer");
         buffer_grow(len);
     }
-    memcpy(buffer + off, content, len);
+    memcpy(buf + off, content, len);
     off += len;
 #ifdef DEBUG
-    dprintf(INFO, "T%d write to result buffer %p:%x:%x", tid, buffer, cap, off);
-    if (strlen(buffer) != off) {
-        dprintf(ERROR, "%d:%d", strlen(buffer), off);
-        assert(strlen(buffer) == off);
+    dprintf(INFO, "T%d write to result buffer %p:%x:%x", tid, buf, cap, off);
+    if (strlen(buf) != off) {
+        dprintf(ERROR, "%d:%d", strlen(buf), off);
+        assert(strlen(buf) == off);
     }
 #endif
     return len;
@@ -121,21 +197,21 @@ size_t write_buffer(const char *content, size_t len)
 
 char *read_buffer()
 {
-    return buffer;
+    return buf;
 }
 
 void destroy_buffer()
 {
-    if (buffer)
-        free(buffer);
-    buffer = NULL;
+    if (buf)
+        free(buf);
+    buf = NULL;
     cap = 0;
     off = 0;
 }
 
 void reset_buffer()
 {
-    dprintf(WARN, "T%d buffer=%p, cap=%u, off=%u", tid, buffer, cap, off);
+    dprintf(WARN, "T%d buffer=%p, cap=%u, off=%u", tid, buf, cap, off);
     init_buffer();
 }
 
@@ -158,7 +234,7 @@ size_t writef_buffer(const char *format, ...)
 
 size_t writeline_buffer(const char *content, size_t len)
 {
-    dprintf(INFO, "T%d write to result buffer %p:%x:%x", tid, buffer, cap, off);
+    dprintf(INFO, "T%d write to result buffer %p:%x:%x", tid, buf, cap, off);
     if (off + len > cap) {
         dprintf(WARN, "insufficient buffer");
         buffer_grow(len);
@@ -166,12 +242,12 @@ size_t writeline_buffer(const char *content, size_t len)
     int i;
     for (i = 0; i < len && content[i] != '\n'; i++)
         ;
-    memcpy(buffer + off, content, i);
+    memcpy(buf + off, content, i);
     off += i;
 #ifdef DEBUG
-    if (strlen(buffer) != off) {
-        dprintf(ERROR, "%d:%d", strlen(buffer), off);
-        assert(strlen(buffer) == off);
+    if (strlen(buf) != off) {
+        dprintf(ERROR, "%d:%d", strlen(buf), off);
+        assert(strlen(buf) == off);
     }
 #endif
     return i;
@@ -195,7 +271,7 @@ size_t writeline_color_buffer(const char *content, size_t len,
     }
 
     /* where in the buffer to start copying content to */
-    char *bufferend = buffer + off;
+    char *bufferend = buf + off;
 
     /* where to put the first part of highlight code */
     char *hilitoken = bufferend + off1;
@@ -224,10 +300,10 @@ size_t writeline_color_buffer(const char *content, size_t len,
     memcpy(reststr, restctnt, i);
     off += (uint32_t)(reststr - bufferend) + i;
 #ifdef DEBUG
-    dprintf(INFO, "T%d write to result buffer %p:%x:%x", tid, buffer, cap, off);
-    if (strlen(buffer) != off) {
-        dprintf(ERROR, "%d:%d", strlen(buffer), off);
-        assert(strlen(buffer) == off);
+    dprintf(INFO, "T%d write to result buffer %p:%x:%x", tid, buf, cap, off);
+    if (strlen(buf) != off) {
+        dprintf(ERROR, "%d:%d", strlen(buf), off);
+        assert(strlen(buf) == off);
     }
 #endif
     return reststr - bufferend + i;
@@ -235,14 +311,14 @@ size_t writeline_color_buffer(const char *content, size_t len,
 
 size_t amendline_color_buffer(size_t lastlen, size_t off1, size_t colorlen, int cnt)
 {
-    dprintf(INFO, "T%d write to result buffer %p:%u(%x):%u(%x)-%d", tid, buffer, cap, cap, off, off, strlen(buffer));
+    dprintf(INFO, "T%d write to result buffer %p:%u(%x):%u(%x)-%d", tid, buf, cap, cap, off, off, strlen(buf));
     /* dprintf(ERROR, ">>> %s", buffer); */
     if (off + sizeof(HILI_COLOR) + 3 > cap) {
         dprintf(WARN, "insufficient buffer");
         buffer_grow(sizeof(HILI_COLOR) + 3);
     }
 
-    char *amendstart = buffer + off - lastlen
+    char *amendstart = buf + off - lastlen
             + off1 + cnt * (sizeof(HILI_COLOR) + 3);
     char *amendend   = amendstart + colorlen;
     char *restline   = amendend + sizeof(HILI_COLOR) + 3;
@@ -259,10 +335,10 @@ size_t amendline_color_buffer(size_t lastlen, size_t off1, size_t colorlen, int 
            , "\e[0m", 4);
     off += sizeof(HILI_COLOR) + 3;
 #ifdef DEBUG
-    if (strlen(buffer) != off) {
-        dprintf(ERROR, "T%d %d:%d", tid, strlen(buffer), off);
-        dprintf(ERROR, "--> %s\n", buffer);
-        assert(strlen(buffer) == off);
+    if (strlen(buf) != off) {
+        dprintf(ERROR, "T%d %d:%d", tid, strlen(buf), off);
+        dprintf(ERROR, "--> %s\n", buf);
+        assert(strlen(buf) == off);
     }
 #endif
     return sizeof(HILI_COLOR) + 3;

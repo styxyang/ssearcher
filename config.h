@@ -3,6 +3,8 @@
 
 #include <sys/types.h>
 
+#define ROPE
+
 /* #define USE_PTHREAD */
 #ifndef uint64_t
 typedef unsigned long long uint64_t;

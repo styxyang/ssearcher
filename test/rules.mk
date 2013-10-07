@@ -12,4 +12,7 @@ test_buf: test/test_buf.cpp obj/buffer.o
 test_match: test/test_match.cpp obj/match.o
 	$(SF_CXX) $(CFLAGS) $(TEST_HEADERS) $(TEST_LD_PATH) -o $@ $^ $(TEST_LDFLAGS)
 
-TEST_SUITE := test_trie test_buf test_match
+test_rope: test/test_rope.cpp obj/buffer.o obj/util.o
+	$(SF_CXX) $(CFLAGS) $(TEST_HEADERS) $(TEST_LD_PATH) -o $@ $^ $(TEST_LDFLAGS)
+
+TEST_SUITE := test_trie test_buf test_match test_rope

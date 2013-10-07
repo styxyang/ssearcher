@@ -2,6 +2,8 @@
 #define SS_POOL_H_
 
 #include "config.h"
+#include "util.h"
+#include "buffer.h"
 #include <pthread.h>
 
 #define ENABLE_FTS
