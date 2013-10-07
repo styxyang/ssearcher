@@ -31,6 +31,15 @@ struct filerecord {
     uint32_t matchcnt;
     struct rope *matchlst;
 } __attribute__ ((aligned(64)));
+/* result buffer of match records in one file
+ * it should be embedded in file structures b/c it
+ * actually belongs to one file
+ */
+typedef struct {
+    char  *pbuf;
+    size_t cap;
+    size_t off;
+} rbuf;
 
 void init_buffer();
 size_t write_buffer(const char *content, size_t len);

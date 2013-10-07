@@ -81,13 +81,12 @@ void *worker_thread(void *arg)
     while (1) {
         /* FIXME use queue to replace the pipe */
         pthread_mutex_lock(&readmtx);
-        n = read(pipefd[0], &fi, sizeof(fileinfo));
+        n = read(pipefd[0], &fi, sizeof(fi));
         pthread_mutex_unlock(&readmtx);
 
         if (n == 0)
             break;
-
-        if (n != sizeof(fileinfo)) {
+        if (n != sizeof(fi)) {
             cpu_relax();
             continue;
         }

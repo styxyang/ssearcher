@@ -1,3 +1,9 @@
+/*
+ * buffer.c: Manage strings and buffers
+ * Copyright (c) 2013, Yang Hong
+ * All rights reserved.
+ */
+
 #include "debug.h"
 #include "config.h"
 #include "buffer.h"
@@ -171,13 +177,15 @@ size_t writeline_buffer(const char *content, size_t len)
     return i;
 }
 
-/* write to buffer a line with specified characters hightlighted
+/**
+ * write to buffer a line with specified characters hightlighted
  * from `off1' with `length' and total length within `len'
  *
- * \param content  string that is going to be appended to buffer
- * \param len      max length to copy
- * \param off1     offset of the patched string in content string
- * \param colorlen length of highlight */
+ * @param content  string that is going to be appended to buffer
+ * @param len      max length to copy
+ * @param off1     offset of the patched string in content string
+ * @param colorlen length of highlight
+ */
 size_t writeline_color_buffer(const char *content, size_t len,
                               size_t off1, size_t colorlen)
 {
