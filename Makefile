@@ -5,9 +5,12 @@
 #
 
 SUBDIR := snippets test
+SRCDIR := src
 OBJDIR := obj
 DEPDIR := dep
 UNAME_S := $(shell uname -s)
+
+BUILD := debug
 
 # test environment variables
 TEST_HEADERS := -I. -Igtest/include
@@ -19,13 +22,15 @@ OBJS :=
 
 TARGETS :=
 
-.PHONY: default clean depclean test-build-env test
+.PHONY: default clean depclean test-build-env test dependence
 
 # Make sure that 'default' is the first target
 default:
 
+dependence: 
+
 include sf.mk
-include $(patsubst %, %/rules.mk, $(SUBDIR))
+# include $(patsubst %, %/rules.mk, $(SUBDIR))
 include common.mk
 
 default: $(TARGETS)
@@ -36,7 +41,7 @@ default: $(TARGETS)
 # .PHONY: dep
 
 # include automatically generated dependencies
-include $(patsubst %.c, $(DEPDIR)/%.d,$(SRCS))
+-include $(patsubst %.c,$(DEPDIR)/%.d,$(subst $(SRCDIR)/,,$(SRCS)))
 
 # Generage dependencies like:
 # obj/main.o: src/main.c src/options.h src/debug.h
@@ -44,11 +49,11 @@ include $(patsubst %.c, $(DEPDIR)/%.d,$(SRCS))
 # binary files in `obj' directory
 # -MT: specify the target file
 # -MM: specify input file(s)
-$(DEPDIR)/%.d: %.c
+$(DEPDIR)/%.d: $(SRCDIR)/%.c
 	@mkdir -p $(@D)
-	$(SF_CC) $(CFLAGS) -I. -MM $< -MT $(patsubst %.c,$(OBJDIR)/%.o, $<) > $@;
+	$(SF_CC) $(CFLAGS) -I. -MM $< -MT $(patsubst %.c,%.o,$(subst $(SRCDIR),$(OBJDIR)/debug, $<)) > $@;
 
-$(OBJDIR)/%.o: %.c
+$(OBJDIR)/$(BUILD)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(@D)
 	$(SF_CC) $(CFLAGS) -I. -c $< -o $@
 
