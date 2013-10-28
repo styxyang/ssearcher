@@ -25,6 +25,10 @@ extern int pipefd[2];
 extern int result[NCPU][2];
 extern __thread size_t off;
 
+
+#define WSR_NEWLINE 0
+#define WSR_APPEND  1
+
 /* thread id */
 __thread long tid;
 
@@ -52,7 +56,7 @@ static void worker_writebuffer(char *fb, uint32_t pos,
 
     uint32_t bol = begin_of_line(fb, pos);
     if (linum != lastlinum) {
-        writef_buffer(LINUM_COLOR "\n%u:" "\e[0m", linum);
+        writef_buffer(LINUM_COLOR("%u:"), linum);
         nll = writeline_color_buffer(fb + bol, 1024, pos - bol, opt.search_patlen);
         lastlinum = linum;
         cnt = 1;
@@ -73,13 +77,16 @@ void *worker_thread(void *arg)
 
     /* init block */
     {
+#ifdef ROPE
+        INIT_LIST_HEAD(&file_record_list);
+#endif /* ROPE */
         init_buffer();
         kmp_prepare(opt.search_pattern, opt.search_patlen);
     }
 
     /* loop to read opened file descriptors from pipe */
     while (1) {
-        /* FIXME use queue to replace the pipe */
+        /* XXX use queue to replace the pipe */
         pthread_mutex_lock(&readmtx);
         n = read(pipefd[0], &fi, sizeof(fi));
         pthread_mutex_unlock(&readmtx);
@@ -108,6 +115,7 @@ void *worker_thread(void *arg)
          *              the same line */
         uint32_t linum = 1;
         uint32_t lastlinum = 0;
+        uint32_t last_linum = 0;
 
         /* FIXME opt.search_pattern should be guarenteed to be not null */
         /* XXX shall we use likely/unlikely to do branch prediction? */

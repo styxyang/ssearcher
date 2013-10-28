@@ -25,7 +25,7 @@ struct rope {
     uint8_t tag;
 } __attribute__ ((aligned(64)));
 
-#define TAG_DEFAULT 0  /* default, for inner nodes */
+#define TAG_DEFAULT 0  /* default, for inner nodes, only used when join ropes */
 #define TAG_CONTEXT 1  /* context, for non-keyword text */
 #define TAG_KEYWORD 2  /* keyword, the search target */
 #define TAG_ANSIESC 3  /* ansi color escape, for coloring the keyword */
