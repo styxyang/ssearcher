@@ -25,6 +25,18 @@ extern int pipefd[2];
 extern int result[NCPU][2];
 extern __thread size_t off;
 
+#ifdef ROPE
+/* list of matching entries in a file */
+struct file_record {
+    struct list_head lh;
+    fileinfo fi;
+    uint32_t matchcnt;
+    buffer buf;
+    struct list_head matchlist;
+} __attribute__ ((aligned(64)));
+
+static __thread struct list_head file_record_list;
+#endif
 
 #define WSR_NEWLINE 0
 #define WSR_APPEND  1
@@ -46,6 +58,35 @@ static uint32_t begin_of_line(char *fb, uint32_t mid)
     }
     return mid;
 }
+
+#ifdef ROPE
+static void worker_save_record(struct file_record *fr, char *fb, uint32_t pos, uint32_t linum, uint8_t op)
+{
+    static uint32_t last_linum;
+    uint32_t bol = begin_of_line(fb, pos);
+    if (op == WSR_NEWLINE) {
+        /* start a new line */
+        /* char num[16]; */
+        /* sprintf(num, LINUM_COLOR("%u:"), linum); */
+        /* struct rope *rope_linum = (struct rope *)malloc(sizeof(*rope_linum)); */
+        /* /\* xxx it is line number, and maybe we can avoid the copy above *\/ */
+        /* rope_set(rope_linum, num, TAG_DEFAULT); */
+
+        /* struct rope *rope_left = (struct rope *)malloc(sizeof(*rope_left)); */
+        /* rope_setn(rope_left, fb + bol, pos - bol, TAG_CONTEXT); */
+        buf_write(&fr->buf, fb + bol, pos - bol, TAG_CONTEXT);
+
+        /* struct rope *rope_right = (struct rope *)malloc(sizeof(*rope_right)); */
+        /* /\* FIXME THIS SHOULD STOP BEFORE NEWLINE! *\/ */
+        /* rope_setn(rope_right, fb + pos + opt.search_patlen, TAG_CONTEXT); */
+        buf_writeln(&fr->buf, fb + pos + opt.search_patlen, TAG_CONTEXT);
+
+        /* struct rope *rope_kw = (struct rope *)malloc(sizeof(*rope_kw)); */
+        /* rope_setn(rope_kw, fb + pos, opt.search_patlen, TAG_KEYWORD); */
+    } else if (op == WSR_APPEND) {
+    }
+}
+#endif  /* ROPE */
 
 /* write matched data to buffer with line number `linum' and `lastlinum' */
 static void worker_writebuffer(char *fb, uint32_t pos,
@@ -98,16 +139,23 @@ void *worker_thread(void *arg)
             continue;
         }
 
-        char buf[16];
-        char *fb;  /* `fb' for file buffer */
+#ifdef ROPE
+        struct file_record *fr = (struct file_record *)malloc(sizeof(*fr));
+        fr->fi = fi;
+        fr->matchcnt = 0;
+        INIT_LIST_HEAD(&fr->lh);
+        INIT_LIST_HEAD(&fr->matchlist);
+        buf_init(&fr->buf);
+#endif /* ROPE */
+        
+        char *fb;  /* `fb' for file buffer, pointer to the mapped file */
         if ((fb = map_file(&fi)) == NULL) {
-            close(fi.fd);
             cpu_relax();
             continue;
         }
 
-        /* `matchpos': the position matched in every iteration
-         * `startpos': the position where every iteration starts */
+        /* `matchpos': the relative matching offset in every iteration
+         * `startpos': the position where every search iteration starts from */
         uint32_t matchpos = 0, startpos = 0;
 
         /* `linum': line number of every match result, initial line number is 1
@@ -128,8 +176,14 @@ void *worker_thread(void *arg)
             dprintf(INFO, "T%d <%s> match at %d", tid, fi.filename,
                     matchpos + startpos);
 
-            memset(buf, 0, sizeof(buf));
             worker_writebuffer(fb, matchpos + startpos, linum, lastlinum);
+#ifdef ROPE
+            if (last_linum == linum) {
+                worker_save_record(fr, fb, matchpos + startpos, linum, WSR_APPEND);
+            } else {
+                worker_save_record(fr, fb, matchpos + startpos, linum, WSR_NEWLINE);
+            }
+#endif /* ROPE */
             /* There should be no exceptions */
 
             /* dprintf(INFO, "write to result pipe\n"); */
@@ -137,7 +191,12 @@ void *worker_thread(void *arg)
             startpos += matchpos + opt.search_patlen;
         }
 
+#ifdef ROPE
+        list_add_tail(&fr->lh, &file_record_list);
+#endif /* ROPE */
+
         /* if offset is not zero, buffer contains something to write */
+        /* if (false) { */
         if (off) {
             /* FIXME abstract as `write_filename' maybe */
             pthread_mutex_lock(&outmtx);
@@ -145,7 +204,7 @@ void *worker_thread(void *arg)
             if (!opt.list_matching_files)
                 fprintf(stdout, "%s\n", read_buffer());
             pthread_mutex_unlock(&outmtx);
-            free(fi.filename);
+            /* free(fi.filename); */
             fflush(NULL);
         }
 

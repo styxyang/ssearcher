@@ -37,14 +37,25 @@ struct rope {
  * it should be embedded in file structures b/c it
  * actually belongs to one file
  */
+/* typedef struct { */
+/*     char  *p; */
+/*     size_t cap; */
+/*     size_t off; */
+/* } buffer; */
 typedef struct {
     struct list_head ropelist;
 } buffer;
 
+typedef struct rope * knot;  /* a stub to modify last written record */
+
 void buf_init(buffer *buf);
 void buf_destroy(buffer *buf);
-size_t buf_write(buffer *buf, const char *content, size_t len);
+knot buf_write(buffer *buf, const char *content, uint32_t len, uint8_t tag);
 void buf_dump(buffer *buf);
+
+/* extended functions for coloring purpose */
+int  buf_color(knot which, uint32_t off, uint32_t len);
+void buf_write_offset(buffer *buf, const char *content, uint32_t len, uint32_t off);
 
 void init_buffer();
 size_t write_buffer(const char *content, size_t len);

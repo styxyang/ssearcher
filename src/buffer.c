@@ -70,33 +70,13 @@ static inline bool rope_isleaf(struct rope *r)
     }
 }
 
-#endif  /* ROPE */
+/* static void rope_color(struct rope *r, uint32_t offset) */
+/* { */
+/* } */
 
 void buf_init(buffer *buf)
 {
     INIT_LIST_HEAD(&buf->ropelist);
-
-/*     if (buf->p != NULL) { */
-/* #ifdef DEBUG */
-/*         dprintf(WARN, "T%d before realloc buffer=%p cap=%u(%x) off=%u(%x)", */
-/*                 tid, buf->p, buf->cap, buf->cap, buf->off, buf->off); */
-/* #endif */
-/*         buf->p = realloc(buf->p, DEFAULT_SIZE * sizeof(char)); */
-
-/* #ifdef DEBUG */
-/*         dprintf(WARN, "T%d after realloc buffer=%p cap=%u(%x) off=%u(%x)", */
-/*                 tid, buf->p, buf->cap, buf->cap, buf->off, buf->off); */
-/* #endif */
-/*     } else { */
-/*         buf->p = malloc(DEFAULT_SIZE * sizeof(char)); */
-/*     } */
-/*     memset(buf->p, 0, DEFAULT_SIZE); */
-/*     buf->cap = DEFAULT_SIZE; */
-/*     buf->off = 0; */
-
-/* #ifdef DEBUG */
-/*     grow_cnt = 0; */
-/* #endif */
 }
 
 void buf_destroy(buffer *buf)
@@ -111,11 +91,20 @@ void buf_destroy(buffer *buf)
     }
 }
 
-size_t buf_write(buffer *buf, const char *content, size_t len)
+knot buf_write(buffer *buf, const char *content, uint32_t len, uint8_t tag)
 {
-    struct rope *pr = (struct rope *)malloc(sizeof(*pr));
-    rope_setn(pr, content, len, TAG_CONTEXT);
-    list_add_tail(&pr->lh, &buf->ropelist);
+    struct rope *r = (struct rope *)malloc(sizeof(*r));
+    rope_setn(r, content, len, tag);
+    list_add_tail(&r->lh, &buf->ropelist);
+    return r;
+}
+
+knot buf_writeln(buffer *buf, const char *content, uint8_t tag)
+{
+    struct rope *r = (struct rope *)malloc(sizeof(*r));
+    /* rope_setn(r, content, len, tag); */
+    /* list_add_tail(&r->lh, &buf->ropelist); */
+    return r;
 }
 
 void buf_dump(buffer *buf)
@@ -127,6 +116,43 @@ void buf_dump(buffer *buf)
         }
     }
 }
+
+/*********************************************************
+ *
+ * extended functions
+ *
+ ********************************************************/
+
+/**
+ * color a segment of existing rope with offset
+ * from the beginning of the line
+ */
+int buf_color(knot which, uint32_t off, uint32_t len)
+{
+    struct rope *r = which;
+    while (r) {
+        if (rope_isleaf(r)) {
+            return -1;  /* reach leaf rope */
+        }
+        if (off < r->offset) {
+            r = r->left;
+            continue;
+        }
+        if (off >= r->offset) {
+            r = r->right;
+            continue;
+        }
+    }
+    return -1;  /* invalid rope */
+}
+
+void buf_write_offset(buffer *buf, const char *content, uint32_t len, uint32_t off)
+{
+    /* FIXME select the tag */
+    struct rope *r = buf_write(buf, content, len, TAG_CONTEXT);
+    r->offset = off;
+}
+#endif  /* ROPE */
 
 static void buffer_grow(size_t len)
 {

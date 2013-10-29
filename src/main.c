@@ -72,7 +72,7 @@ int sf_check_buffer()
                 int n = read(fdset[0].fd, result, sizeof(result));
                 if (n == 0)
                     return 0;
-                char buf[100000];
+                char buf[4096 * 4];
                 setvbuf(stdout, buf, _IOFBF, sizeof(buf));
                 printf("[%zu]%s\n", strlen(result), result);
                 /* read from readfd, 
