@@ -16,7 +16,7 @@
 #define ERROR_COLOR  "\e[1;31m"
 #define WARN_COLOR   "\e[1;33m"
 #define INFO_COLOR   "\e[1;34m"
-#define FNAME_COLOR  "\e[1;34m"
+#define FNAME_COLOR(x)  "\e[1;34m" x "\e[0m"
 #define LINUM_COLOR(x)  "\e[1;35m" x "\e[0m"
 #define HILI_COLOR   "\e[48;5;220m\e[30;22m"
 

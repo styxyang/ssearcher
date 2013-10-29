@@ -66,23 +66,26 @@ static void worker_save_record(struct file_record *fr, char *fb, uint32_t pos, u
     uint32_t bol = begin_of_line(fb, pos);
     if (op == WSR_NEWLINE) {
         /* start a new line */
-        /* char num[16]; */
-        /* sprintf(num, LINUM_COLOR("%u:"), linum); */
+        char num[16];
+        sprintf(num, LINUM_COLOR("%u:"), linum);
         /* struct rope *rope_linum = (struct rope *)malloc(sizeof(*rope_linum)); */
         /* /\* xxx it is line number, and maybe we can avoid the copy above *\/ */
         /* rope_set(rope_linum, num, TAG_DEFAULT); */
+        buf_write_newline(&fr->buf, num, TAG_CONTEXT, 0);
 
         /* struct rope *rope_left = (struct rope *)malloc(sizeof(*rope_left)); */
         /* rope_setn(rope_left, fb + bol, pos - bol, TAG_CONTEXT); */
-        buf_write(&fr->buf, fb + bol, pos - bol, TAG_CONTEXT);
+        /* buf_write(&fr->buf, fb + bol, pos - bol, TAG_CONTEXT); */
+        buf_write(&fr->buf, fb + bol, pos - bol, TAG_CONTEXT, 0); /* maybe delimiter is prior to len */
 
         /* struct rope *rope_right = (struct rope *)malloc(sizeof(*rope_right)); */
         /* /\* FIXME THIS SHOULD STOP BEFORE NEWLINE! *\/ */
         /* rope_setn(rope_right, fb + pos + opt.search_patlen, TAG_CONTEXT); */
-        buf_writeln(&fr->buf, fb + pos + opt.search_patlen, TAG_CONTEXT);
+        buf_write(&fr->buf, fb + pos + opt.search_patlen, 0, TAG_CONTEXT, '\n');
 
         /* struct rope *rope_kw = (struct rope *)malloc(sizeof(*rope_kw)); */
         /* rope_setn(rope_kw, fb + pos, opt.search_patlen, TAG_KEYWORD); */
+        buf_write(&fr->buf, fb + pos, opt.search_patlen, TAG_KEYWORD, 0);
     } else if (op == WSR_APPEND) {
     }
 }
@@ -97,7 +100,7 @@ static void worker_writebuffer(char *fb, uint32_t pos,
 
     uint32_t bol = begin_of_line(fb, pos);
     if (linum != lastlinum) {
-        writef_buffer(LINUM_COLOR("%u:"), linum);
+        writef_buffer(LINUM_COLOR("\n%u:"), linum);
         nll = writeline_color_buffer(fb + bol, 1024, pos - bol, opt.search_patlen);
         lastlinum = linum;
         cnt = 1;
@@ -200,7 +203,7 @@ void *worker_thread(void *arg)
         if (off) {
             /* FIXME abstract as `write_filename' maybe */
             pthread_mutex_lock(&outmtx);
-            fprintf(stdout, FNAME_COLOR "%s" "\e[0m\n", fi.filename);
+            fprintf(stdout, FNAME_COLOR("\n%s"), fi.filename);
             if (!opt.list_matching_files)
                 fprintf(stdout, "%s\n", read_buffer());
             pthread_mutex_unlock(&outmtx);

@@ -48,15 +48,19 @@ typedef struct {
 
 typedef struct rope * knot;  /* a stub to modify last written record */
 
+/* New interface */
 void buf_init(buffer *buf);
 void buf_destroy(buffer *buf);
-knot buf_write(buffer *buf, const char *content, uint32_t len, uint8_t tag);
+/* what if len is 0? what if delim is 0? */
+knot buf_write(buffer *buf, const char *content, uint32_t len, uint8_t tag, char delim);
 void buf_dump(buffer *buf);
 
 /* extended functions for coloring purpose */
 int  buf_color(knot which, uint32_t off, uint32_t len);
 void buf_write_offset(buffer *buf, const char *content, uint32_t len, uint32_t off);
+knot buf_write_newline(buffer *buf, const char *content, uint8_t tag, char delim);
 
+/* Old interface */
 void init_buffer();
 size_t write_buffer(const char *content, size_t len);
 size_t writef_buffer(const char *format, ...);

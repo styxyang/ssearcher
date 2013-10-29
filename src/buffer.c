@@ -91,7 +91,7 @@ void buf_destroy(buffer *buf)
     }
 }
 
-knot buf_write(buffer *buf, const char *content, uint32_t len, uint8_t tag)
+knot buf_write(buffer *buf, const char *content, uint32_t len, uint8_t tag, char delim)
 {
     struct rope *r = (struct rope *)malloc(sizeof(*r));
     rope_setn(r, content, len, tag);
@@ -149,8 +149,13 @@ int buf_color(knot which, uint32_t off, uint32_t len)
 void buf_write_offset(buffer *buf, const char *content, uint32_t len, uint32_t off)
 {
     /* FIXME select the tag */
-    struct rope *r = buf_write(buf, content, len, TAG_CONTEXT);
+    struct rope *r = buf_write(buf, content, len, TAG_CONTEXT, 0);
     r->offset = off;
+}
+
+knot buf_write_newline(buffer *buf, const char *content, uint8_t tag, char delim)
+{
+    return NULL;
 }
 #endif  /* ROPE */
 
