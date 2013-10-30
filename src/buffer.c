@@ -110,10 +110,11 @@ knot buf_writeln(buffer *buf, const char *content, uint8_t tag)
 void buf_dump(buffer *buf)
 {
     struct rope *p;
+    printf("start dump\n");
     list_for_each_entry(p, &buf->ropelist, lh) {
-        if (rope_isleaf(p)) {
+        /* if (rope_isleaf(p)) { */
             printf("%s\n", p->pstr);
-        }
+        /* } */
     }
 }
 

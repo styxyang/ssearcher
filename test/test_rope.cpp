@@ -29,22 +29,22 @@ protected:
 
 TEST_F(RopeTest, AddTest)
 {
-    buf_write(&buf, "helloworld", 10);
-    buf_write(&buf, "helloworld", 10);
-    buf_write(&buf, "helloworld", 10);
+    buf_write(&buf, "helloworld", 10, TAG_DEFAULT, 0);
+    buf_write(&buf, "helloworld", 10, TAG_DEFAULT, 0);
+    buf_write(&buf, "helloworld", 10, TAG_DEFAULT, 0);
     EXPECT_EQ(list_empty(&buf.ropelist), false);
 }
 
-TEST_F(RopeTest, BaseTest)
+TEST_F(RopeTest, TrivialTest)
 {
     EXPECT_EQ(list_empty(&buf.ropelist), true);
 }
 
 TEST_F(RopeTest, DumpTest)
 {
-    buf_write(&buf, "helloworld", 10);
-    buf_write(&buf, "helloworld", 10);
-    buf_write(&buf, "helloworld", 10);
+    buf_write(&buf, "helloworld", 10, TAG_DEFAULT, 0);
+    buf_write(&buf, "helloworld", 10, TAG_DEFAULT, 0);
+    buf_write(&buf, "helloworld", 10, TAG_DEFAULT, 0);
     buf_dump(&buf);
     EXPECT_EQ(1, 1);
 }

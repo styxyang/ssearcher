@@ -4,7 +4,7 @@
 # Copyright (c) 2013 by Yang Hong <hy dot styx at gmail dot com>
 #
 
-SUBDIR := snippets test
+SUBDIR := test
 SRCDIR := src
 OBJDIR := obj
 DEPDIR := dep
@@ -13,7 +13,7 @@ UNAME_S := $(shell uname -s)
 BUILD := debug
 
 # test environment variables
-TEST_HEADERS := -I. -Igtest/include
+TEST_HEADERS := -Isrc -Igtest/include
 TEST_LD_PATH := -Lgtest/build -L/usr/lib
 TEST_LDFLAGS := -lgtest_main -lgtest -pthread
 
@@ -30,7 +30,7 @@ default:
 dependence: 
 
 include sf.mk
-# include $(patsubst %, %/rules.mk, $(SUBDIR))
+include $(patsubst %, %/rules.mk, $(SUBDIR))
 include common.mk
 
 default: $(TARGETS)

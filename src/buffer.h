@@ -52,6 +52,15 @@ typedef struct rope * knot;  /* a stub to modify last written record */
 void buf_init(buffer *buf);
 void buf_destroy(buffer *buf);
 /* what if len is 0? what if delim is 0? */
+/**
+ * buf_write write a string to the buffer, limited by length or the delimiter.
+ * It will return a knot to the newly created string for modification
+ * @param buf the buffer to add the string to
+ * @param content the content of the string to be created
+ * @param len length of the string
+ * @param tag type of this string
+ * @param delim delimiter that marks the end of content
+  */
 knot buf_write(buffer *buf, const char *content, uint32_t len, uint8_t tag, char delim);
 void buf_dump(buffer *buf);
 
