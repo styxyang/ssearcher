@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-#define ROPE
+/* #define ROPE */
 
 /* #define USE_PTHREAD */
 #ifndef uint64_t

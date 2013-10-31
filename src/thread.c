@@ -25,22 +25,6 @@ extern int pipefd[2];
 extern int result[NCPU][2];
 extern __thread size_t off;
 
-#ifdef ROPE
-/* list of matching entries in a file */
-struct file_record {
-    struct list_head lh;
-    fileinfo fi;
-    uint32_t matchcnt;
-    buffer buf;
-    struct list_head matchlist;
-} __attribute__ ((aligned(64)));
-
-static __thread struct list_head file_record_list;
-#endif
-
-#define WSR_NEWLINE 0
-#define WSR_APPEND  1
-
 /* thread id */
 __thread long tid;
 
@@ -58,38 +42,6 @@ static uint32_t begin_of_line(char *fb, uint32_t mid)
     }
     return mid;
 }
-
-#ifdef ROPE
-static void worker_save_record(struct file_record *fr, char *fb, uint32_t pos, uint32_t linum, uint8_t op)
-{
-    static uint32_t last_linum;
-    uint32_t bol = begin_of_line(fb, pos);
-    if (op == WSR_NEWLINE) {
-        /* start a new line */
-        char num[16];
-        sprintf(num, LINUM_COLOR("%u:"), linum);
-        /* struct rope *rope_linum = (struct rope *)malloc(sizeof(*rope_linum)); */
-        /* /\* xxx it is line number, and maybe we can avoid the copy above *\/ */
-        /* rope_set(rope_linum, num, TAG_DEFAULT); */
-        buf_write_newline(&fr->buf, num, TAG_CONTEXT, 0);
-
-        /* struct rope *rope_left = (struct rope *)malloc(sizeof(*rope_left)); */
-        /* rope_setn(rope_left, fb + bol, pos - bol, TAG_CONTEXT); */
-        /* buf_write(&fr->buf, fb + bol, pos - bol, TAG_CONTEXT); */
-        buf_write(&fr->buf, fb + bol, pos - bol, TAG_CONTEXT, 0); /* maybe delimiter is prior to len */
-
-        /* struct rope *rope_right = (struct rope *)malloc(sizeof(*rope_right)); */
-        /* /\* FIXME THIS SHOULD STOP BEFORE NEWLINE! *\/ */
-        /* rope_setn(rope_right, fb + pos + opt.search_patlen, TAG_CONTEXT); */
-        buf_write(&fr->buf, fb + pos + opt.search_patlen, 0, TAG_CONTEXT, '\n');
-
-        /* struct rope *rope_kw = (struct rope *)malloc(sizeof(*rope_kw)); */
-        /* rope_setn(rope_kw, fb + pos, opt.search_patlen, TAG_KEYWORD); */
-        buf_write(&fr->buf, fb + pos, opt.search_patlen, TAG_KEYWORD, 0);
-    } else if (op == WSR_APPEND) {
-    }
-}
-#endif  /* ROPE */
 
 /* write matched data to buffer with line number `linum' and `lastlinum' */
 static void worker_writebuffer(char *fb, uint32_t pos,
@@ -121,9 +73,6 @@ void *worker_thread(void *arg)
 
     /* init block */
     {
-#ifdef ROPE
-        INIT_LIST_HEAD(&file_record_list);
-#endif /* ROPE */
         init_buffer();
         kmp_prepare(opt.search_pattern, opt.search_patlen);
     }
@@ -142,15 +91,6 @@ void *worker_thread(void *arg)
             continue;
         }
 
-#ifdef ROPE
-        struct file_record *fr = (struct file_record *)malloc(sizeof(*fr));
-        fr->fi = fi;
-        fr->matchcnt = 0;
-        INIT_LIST_HEAD(&fr->lh);
-        INIT_LIST_HEAD(&fr->matchlist);
-        buf_init(&fr->buf);
-#endif /* ROPE */
-        
         char *fb;  /* `fb' for file buffer, pointer to the mapped file */
         if ((fb = map_file(&fi)) == NULL) {
             cpu_relax();
@@ -180,23 +120,12 @@ void *worker_thread(void *arg)
                     matchpos + startpos);
 
             worker_writebuffer(fb, matchpos + startpos, linum, lastlinum);
-#ifdef ROPE
-            if (last_linum == linum) {
-                worker_save_record(fr, fb, matchpos + startpos, linum, WSR_APPEND);
-            } else {
-                worker_save_record(fr, fb, matchpos + startpos, linum, WSR_NEWLINE);
-            }
-#endif /* ROPE */
             /* There should be no exceptions */
 
             /* dprintf(INFO, "write to result pipe\n"); */
             /* write(result[tid][1], buf, sizeof(buf)); */
             startpos += matchpos + opt.search_patlen;
         }
-
-#ifdef ROPE
-        list_add_tail(&fr->lh, &file_record_list);
-#endif /* ROPE */
 
         /* if offset is not zero, buffer contains something to write */
         /* if (false) { */
